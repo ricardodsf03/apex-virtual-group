@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Apex Virtual Group — centro de comando empresarial com IA">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <title>Apex Virtual Group</title>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">A</div><div><strong>APEX</strong><small>VIRTUAL GROUP</small></div></div>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav>
+        <button class="nav-item active" data-view="overview">◫ <span>Visão geral</span></button>
+        <button class="nav-item" data-view="board">▦ <span>Conselho</span></button>
+        <button class="nav-item" data-view="projects">◇ <span>Projetos</span></button>
+        <button class="nav-item" data-view="tasks">☷ <span>Tarefas</span></button>
+        <button class="nav-item" data-view="documents">▤ <span>Documentos</span></button>
+      </nav>
+      <div class="sidebar-bottom"><span class="status-dot"></span> Protótipo local <small>v0.1.0</small></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Abrir menu">☰</button>
+        <div><div class="eyebrow">FOUNDER WORKSPACE</div><div class="page-title" id="pageTitle">Visão geral</div></div>
+        <div class="top-actions"><span class="demo-pill">● DADOS DEMONSTRATIVOS</span><button class="avatar" title="Fundador">F</button></div>
+      </header>
+
+      <section class="content" id="overviewView">
+        <div class="welcome-row">
+          <div><div class="eyebrow">SEGUNDA-FEIRA · WORKSPACE</div><h1>Bom trabalho, Fundador.</h1><p class="muted">O teu centro de comando está pronto para organizar a próxima ideia.</p></div>
+          <button class="primary-btn" id="newProjectBtn">＋ Novo projeto</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-label">Diretores configurados</span><strong>09</strong><span class="stat-note">Estrutura inicial</span></article>
+          <article class="stat-card"><span class="stat-label">Projetos ativos</span><strong>02</strong><span class="stat-note">Exemplos demonstrativos</span></article>
+          <article class="stat-card"><span class="stat-label">Tarefas em curso</span><strong>06</strong><span class="stat-note">Dados fictícios</span></article>
+          <article class="stat-card"><span class="stat-label">Decisões pendentes</span><strong>01</strong><span class="stat-note">Requer validação do fundador</span></article>
+        </div>
+
+        <div class="section-heading"><div><h2>Conselho de administração</h2><p class="muted">Diretores virtuais — perfis iniciais, ainda sem ligação a modelos de IA.</p></div><button class="text-btn" data-go="board">Ver todos →</button></div>
+        <div class="agents-grid" id="agentsGrid"></div>
+
+        <div class="lower-grid">
+          <section class="panel"><div class="panel-heading"><div><h2>Projetos em destaque</h2><p class="muted">Portefólio de demonstração</p></div><button class="text-btn" data-go="projects">Ver projetos →</button></div><div id="projectList"></div></section>
+          <section class="panel"><div class="panel-heading"><div><h2>Atividade recente</h2><p class="muted">Eventos de exemplo</p></div></div><div class="activity"><span class="activity-dot"></span><div><strong>CEO</strong><p>Estrutura inicial do portefólio preparada.</p><small>Evento demonstrativo</small></div></div><div class="activity"><span class="activity-dot purple"></span><div><strong>CFO</strong><p>Modelo de avaliação financeira por definir.</p><small>Evento demonstrativo</small></div></div><div class="activity"><span class="activity-dot amber"></span><div><strong>Fundador</strong><p>Próxima decisão: aprovar arquitetura técnica.</p><small>Evento demonstrativo</small></div></div></section>
+        </div>
+      </section>
+
+      <section class="content hidden" id="boardView"><div class="welcome-row"><div><div class="eyebrow">ESTRUTURA ORGANIZACIONAL</div><h1>Conselho de administração</h1><p class="muted">Perfis e responsabilidades propostos para a primeira versão.</p></div></div><div class="agents-grid board-grid" id="allAgents"></div></section>
+      <section class="content hidden" id="projectsView"><div class="welcome-row"><div><div class="eyebrow">PORTFÓLIO</div><h1>Projetos</h1><p class="muted">Os exemplos abaixo são demonstrativos e podem ser substituídos.</p></div><button class="primary-btn" id="newProjectBtn2">＋ Novo projeto</button></div><div id="allProjects" class="project-grid"></div></section>
+      <section class="content hidden" id="tasksView"><div class="welcome-row"><div><div class="eyebrow">EXECUÇÃO</div><h1>Tarefas</h1><p class="muted">Fila ilustrativa — ainda sem execução autónoma.</p></div></div><div class="panel" id="taskList"></div></section>
+      <section class="content hidden" id="documentsView"><div class="welcome-row"><div><div class="eyebrow">CONHECIMENTO</div><h1>Documentos</h1><p class="muted">Área reservada para relatórios, decisões e ficheiros dos projetos.</p></div></div><div class="empty-state"><div class="empty-icon">▤</div><h2>Biblioteca preparada</h2><p>Na próxima fase ligaremos armazenamento, pesquisa e histórico de versões.</p></div></section>
+      <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · v0.1.0 · Não executa agentes reais</span></footer>
+    </main>
+  </div>
+  <dialog id="projectDialog"><form method="dialog" id="projectForm"><div class="dialog-head"><div><div class="eyebrow">NOVO REGISTO</div><h2>Criar projeto</h2></div><button class="icon-btn" value="cancel" aria-label="Fechar">×</button></div><label for="projectName">Nome do projeto</label><input id="projectName" maxlength="80" required placeholder="Ex.: Plataforma de mobilidade"><label for="projectDescription">Objetivo</label><textarea id="projectDescription" rows="3" placeholder="O que pretendes desenvolver?"></textarea><div class="dialog-actions"><button class="secondary-btn" value="cancel">Cancelar</button><button class="primary-btn" id="saveProjectBtn" value="default">Criar projeto</button></div></form></dialog>
+  <script src="app.js"></script>
+  <script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(()=>{}));</script>
+</body>
+</html>

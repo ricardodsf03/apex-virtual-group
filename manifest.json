@@ -1,0 +1,11 @@
+{
+  "name": "Apex Virtual Group",
+  "short_name": "Apex",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#101827",
+  "description": "Centro de comando da Apex Virtual Group",
+  "icons": []
+}
