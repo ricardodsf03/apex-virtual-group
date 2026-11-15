@@ -1,4 +1,4 @@
-const APP_VERSION = "0.2.0";
+const APP_VERSION = "0.3.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
