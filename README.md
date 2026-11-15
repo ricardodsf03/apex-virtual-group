@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.2.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.3.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -9,13 +9,14 @@ Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para i
 - **Projetos:** criação com validação de nome vazio e duplicado.
 - **Tarefas:** criar, atribuir a um diretor, mudar o estado (Por iniciar, Em curso, Concluída), eliminar com confirmação e filtrar por estado.
 - **Atividade recente:** histórico local das últimas 100 ações.
+- **Supabase (ligação base):** `supabase-config.js` (URL e chave pública validadas) e `supabase-client.js` (cliente oficial numa versão fixa). O estado aparece no rodapé da barra lateral. **Ainda não há tabelas, autenticação nem leitura/escrita de dados.**
 - **PWA:** manifesto com ícones e service worker que funciona offline (incluindo as fontes depois da primeira visita).
 - **Controlo de qualidade:** testes automáticos e um quality gate executados no GitHub Actions em cada push e pull request.
 
 Os dois projetos e as seis tarefas iniciais são exemplos. Os dados ficam apenas neste dispositivo e navegador, sem sincronização.
 
 ## O que ainda NÃO está ligado
-Não existem agentes de IA reais, autenticação, base de dados, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
+Não existem agentes de IA reais, autenticação, tabelas na base de dados, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
 
 ## Executar localmente
 ```bash
@@ -25,11 +26,19 @@ Abra `http://localhost:8000`. Num Codespace, abra a porta 8000 no separador **Po
 
 Também pode publicar esta interface estática em qualquer hosting de sites estáticos. Para produção, configure domínio, HTTPS e políticas de segurança.
 
+## Supabase
+O projeto Supabase está ligado apenas ao nível da configuração. Os dados da app continuam no `localStorage`.
+
+- `supabase-config.js` guarda o URL e a **publishable key** (`sb_publishable_...`), que é pública por desenho. A proteção dos dados virá das políticas RLS.
+- **Nunca** colocar aqui `service_role`, `sb_secret_*`, a palavra-passe da base de dados ou comandos de terminal. O quality gate falha se aparecerem.
+- `supabase-client.js` carrega `@supabase/supabase-js` de uma versão fixa (`SUPABASE_JS_VERSION`) e expõe `window.apexSupabase` (`client`, `validation`, `testConnection()`). Se a rede falhar, o dashboard continua a funcionar.
+- Antes de criar tabelas: ativar RLS em todas e validar com os avisos de segurança do Supabase. Não correr migrações sem rever o esquema.
+
 ## Testes e qualidade
 Requer Node.js 22 ou superior, sem dependências a instalar.
 
 ```bash
-node --test tests/app.test.mjs   # testes de comportamento (estado, tarefas, projetos, escape de HTML)
+node --test tests/app.test.mjs tests/supabase.test.mjs   # comportamento da app e configuração Supabase
 node scripts/quality-gate.mjs    # estrutura, versões coerentes, PWA e segredos
 ```
 
@@ -38,6 +47,7 @@ Ao mudar a versão, atualize `APP_VERSION` em `app.js`, `VERSION` em `service-wo
 ## Estrutura
 ```
 index.html, styles.css, app.js   interface e lógica
+supabase-config.js, supabase-client.js   ligação ao Supabase
 manifest.json, service-worker.js, icons/   PWA
 tests/                           testes (DOM simulado, sem dependências)
 scripts/quality-gate.mjs         verificações estáticas

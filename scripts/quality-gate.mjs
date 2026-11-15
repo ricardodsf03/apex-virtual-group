@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import vm from "node:vm";
 import { spawnSync } from "node:child_process";
 
 const checks = [];
@@ -16,6 +17,8 @@ const html = read("index.html");
 const css = read("styles.css");
 const sw = read("service-worker.js");
 const readme = read("README.md");
+const supabaseConfig = read("supabase-config.js");
+const supabaseClient = read("supabase-client.js");
 const manifest = json("manifest.json");
 
 // --- Ficheiros base -------------------------------------------------------
@@ -74,12 +77,38 @@ for (const file of precached) {
   pass(`Ficheiro em cache existe: ${file}`, exists(file));
 }
 
+// --- Supabase -------------------------------------------------------------
+const supabaseWindow = {};
+try {
+  vm.runInNewContext(supabaseConfig, { window: supabaseWindow, Object, String });
+} catch { /* a validação abaixo falha e mostra o problema */ }
+const supabaseValidation =
+  supabaseWindow.apexValidateSupabaseConfig?.(supabaseWindow.APEX_SUPABASE_CONFIG) ?? {};
+
+for (const file of ["supabase-config.js", "supabase-client.js"]) {
+  const check = spawnSync("node", ["--check", file], { encoding: "utf8" });
+  pass(`Sintaxe JavaScript válida (${file})`, check.status === 0, check.stderr?.trim());
+}
+pass("url_configurada", supabaseValidation.url_configurada === true);
+pass("chave_configurada", supabaseValidation.chave_configurada === true);
+pass(
+  "modulo_no_html",
+  /<script src="supabase-config\.js"><\/script>/.test(html) &&
+    /<script type="module" src="supabase-client\.js"><\/script>/.test(html),
+  "o HTML tem de carregar supabase-config.js e depois supabase-client.js (module)"
+);
+pass(
+  "Ficheiros Supabase sem comandos de terminal",
+  !/read\s+-r\s+-p/.test(supabaseConfig + supabaseClient),
+  "encontrado 'read -r -p' (comando de terminal) dentro de um ficheiro JavaScript"
+);
+
 // --- Segurança básica -----------------------------------------------------
 const secretPattern =
-  /(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
+  /(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|sb_secret_[A-Za-z0-9_-]{10,}|service_role|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
 pass(
   "Sem chaves ou segredos no código público",
-  ![app, html, css, sw].some(text => secretPattern.test(text))
+  ![app, html, css, sw, supabaseConfig, supabaseClient].some(text => secretPattern.test(text))
 );
 
 // --- Resultado ------------------------------------------------------------
