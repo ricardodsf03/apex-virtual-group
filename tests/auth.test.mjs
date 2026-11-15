@@ -176,3 +176,10 @@ test("sem usuário não faz nenhum pedido", async () => {
   await assert.rejects(ensureOrganization(client, { userId: "", directors: DIRECTORS }));
   assert.equal(client.calls.length, 0);
 });
+
+test("senha nova exige o mesmo tamanho mínimo da criação de conta", async () => {
+  const { validateNewPassword } = await import("../auth-core.js");
+  assert.equal(validateNewPassword("curta").ok, false);
+  assert.equal(validateNewPassword("").ok, false);
+  assert.equal(validateNewPassword("a".repeat(MIN_PASSWORD_LENGTH)).ok, true);
+});

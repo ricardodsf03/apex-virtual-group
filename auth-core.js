@@ -23,6 +23,18 @@ export function validateCredentials(email, password, mode) {
   return { ok: true, email: cleanEmail };
 }
 
+// Valida a senha nova (redefinição): mesma regra de tamanho da criação de conta.
+export function validateNewPassword(password) {
+  const secret = String(password ?? "");
+  if (secret.length < MIN_PASSWORD_LENGTH) {
+    return {
+      ok: false,
+      error: `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
+    };
+  }
+  return { ok: true };
+}
+
 // Traduz erros do Supabase Auth para mensagens claras, sem expor detalhes internos.
 export function friendlyAuthError(error) {
   const code = String(error?.code ?? "");

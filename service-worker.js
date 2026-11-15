@@ -1,5 +1,5 @@
 // Mantenha esta versão igual a APP_VERSION em app.js (o quality gate verifica).
-const VERSION = "0.5.0";
+const VERSION = "0.5.1";
 const CACHE = `apex-v${VERSION}`;
 const FONT_CACHE = "apex-fonts";
 
