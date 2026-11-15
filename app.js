@@ -1,4 +1,4 @@
-const APP_VERSION = "0.5.1";
+const APP_VERSION = "0.6.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -48,7 +48,8 @@ function createInitialState() {
       id:makeId(), type:"system", actor:"Sistema",
       message:`Apex Core ${APP_VERSION} inicializado.`,
       createdAt:now
-    }]
+    }],
+    decisions: []
   };
 }
 
@@ -65,6 +66,8 @@ function loadState() {
       !Array.isArray(data.activities)
     ) throw new Error("Estrutura de dados inválida");
 
+    // Dados guardados antes do módulo de decisões não têm esta lista.
+    if (!Array.isArray(data.decisions)) data.decisions = [];
     return data;
   } catch (error) {
     console.error("Apex: falha ao recuperar dados.", error);
@@ -191,6 +194,30 @@ function renderTasks() {
     </div>`).join("") || "<p class='muted'>Não existem tarefas nesta categoria.</p>";
 }
 
+function renderDecisions() {
+  const filter = window.apexDecisionFilter || "Pendente";
+  const items = state.decisions.filter(item =>
+    filter === "Todas" || item.status === filter
+  );
+  const tagClass = { Aprovada:"approved", Rejeitada:"rejected" };
+
+  $("#decisionList").innerHTML = items.map(item => `
+    <div class="decision-row" data-decision-id="${escapeHtml(item.id)}">
+      <span class="tag ${tagClass[item.status] || ""}">${escapeHtml(item.status)}</span>
+      <strong style="margin-top:10px">${escapeHtml(item.title)}</strong>
+      ${item.rationale ? `<p>${escapeHtml(item.rationale)}</p>` : ""}
+      <small>Proposta por ${escapeHtml(item.proposer)} · ${formatDate(item.createdAt)}${
+        item.status !== "Pendente" && item.decidedAt
+          ? ` · ${escapeHtml(item.status)} em ${formatDate(item.decidedAt)}` : ""}</small>
+      ${item.note ? `<small>Nota: ${escapeHtml(item.note)}</small>` : ""}
+      ${item.status === "Pendente" ? `
+        <div class="decision-actions">
+          <button class="approve" data-decision-approve="${escapeHtml(item.id)}">Aprovar</button>
+          <button class="reject" data-decision-reject="${escapeHtml(item.id)}">Rejeitar</button>
+        </div>` : ""}
+    </div>`).join("") || "<p class='muted'>Não há decisões nesta categoria.</p>";
+}
+
 function renderActivities() {
   const panel = $("#activityPanel");
   if (!panel) return;
@@ -216,7 +243,7 @@ function renderStats() {
     agents.length,
     state.projects.length,
     state.tasks.filter(t => t.status !== "Concluída").length,
-    0
+    state.decisions.filter(d => d.status === "Pendente").length
   ];
   document.querySelectorAll(".stats-grid .stat-card strong")
     .forEach((element,index) => {
@@ -230,11 +257,12 @@ function renderAll() {
   renderAgents();
   renderProjects();
   renderTasks();
+  renderDecisions();
   renderActivities();
   renderStats();
 }
 
-const views = ["overview","board","projects","tasks","documents"];
+const views = ["overview","board","projects","tasks","decisions","documents"];
 
 function showView(view) {
   if (!views.includes(view)) return;
@@ -249,6 +277,7 @@ function showView(view) {
     board:"Conselho de administração",
     projects:"Projetos",
     tasks:"Tarefas",
+    decisions:"Decisões",
     documents:"Documentos"
   })[view];
   $("#sidebar").classList.remove("open");
@@ -388,6 +417,73 @@ $("#taskList").addEventListener("click", event => {
 
   state.tasks = state.tasks.filter(item => item.id !== id);
   logActivity("Fundador", `Excluiu a tarefa "${task.title}".`);
+
+  if (!saveState()) return;
+  renderAll();
+});
+
+window.apexDecisionFilter = "Pendente";
+
+const decisionDialog = $("#decisionDialog");
+
+$("#newDecisionBtn").addEventListener("click", () => {
+  $("#decisionForm").reset();
+  decisionDialog.showModal();
+  $("#decisionTitle").focus();
+});
+
+$("#saveDecisionBtn").addEventListener("click", event => {
+  event.preventDefault();
+  const title = $("#decisionTitle").value.trim();
+  if (!title) {
+    alert("Escreva o que precisa ser decidido.");
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const proposer = $("#decisionProposer").value || "Fundador";
+  state.decisions.unshift({
+    id:makeId(), title,
+    rationale:$("#decisionRationale").value.trim(),
+    proposer, status:"Pendente", note:"", decidedAt:null,
+    createdAt:now, updatedAt:now
+  });
+
+  logActivity(proposer, `Propôs a decisão "${title}".`, "decision");
+  if (!saveState()) return;
+
+  renderAll();
+  decisionDialog.close();
+});
+
+document.querySelectorAll(".decision-filter").forEach(button => {
+  button.addEventListener("click", () => {
+    window.apexDecisionFilter = button.dataset.filter;
+    document.querySelectorAll(".decision-filter").forEach(item =>
+      item.classList.toggle("active", item === button)
+    );
+    renderDecisions();
+  });
+});
+
+$("#decisionList").addEventListener("click", event => {
+  const approveId = event.target.dataset.decisionApprove;
+  const rejectId = event.target.dataset.decisionReject;
+  const id = approveId || rejectId;
+  if (!id) return;
+
+  const item = state.decisions.find(entry => entry.id === id);
+  if (!item || item.status !== "Pendente") return; // decisão tomada é definitiva
+
+  const status = approveId ? "Aprovada" : "Rejeitada";
+  const verb = approveId ? "Aprovar" : "Rejeitar";
+  if (!confirm(`${verb} a decisão "${item.title}"? Depois de tomada, não pode ser alterada.`)) return;
+
+  const now = new Date().toISOString();
+  item.status = status;
+  item.decidedAt = now;
+  item.updatedAt = now;
+  logActivity("Fundador", `${status === "Aprovada" ? "Aprovou" : "Rejeitou"} a decisão "${item.title}".`, "decision");
 
   if (!saveState()) return;
   renderAll();

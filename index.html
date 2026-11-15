@@ -24,9 +24,10 @@
         <button class="nav-item" data-view="board">▦ <span>Conselho</span></button>
         <button class="nav-item" data-view="projects">◇ <span>Projetos</span></button>
         <button class="nav-item" data-view="tasks">☷ <span>Tarefas</span></button>
+        <button class="nav-item" data-view="decisions">✓ <span>Decisões</span></button>
         <button class="nav-item" data-view="documents">▤ <span>Documentos</span></button>
       </nav>
-      <div class="sidebar-bottom"><span class="status-dot"></span> Protótipo local <small id="appVersion">v0.5.1</small>
+      <div class="sidebar-bottom"><span class="status-dot"></span> Protótipo local <small id="appVersion">v0.6.0</small>
         <div class="supabase-status" id="supabaseStatus" data-state="checking">Supabase: verificando…</div>
         <div class="supabase-status" id="syncStatus" data-state="" hidden></div></div>
     </aside>
@@ -48,7 +49,7 @@
           <article class="stat-card"><span class="stat-label">Diretores configurados</span><strong>09</strong><span class="stat-note">Estrutura inicial</span></article>
           <article class="stat-card"><span class="stat-label">Projetos</span><strong>02</strong><span class="stat-note">Registros salvos</span></article>
           <article class="stat-card"><span class="stat-label">Tarefas abertas</span><strong>06</strong><span class="stat-note">Tarefas não concluídas</span></article>
-          <article class="stat-card"><span class="stat-label">Decisões pendentes</span><strong>00</strong><span class="stat-note">Sem módulo de decisões conectado</span></article>
+          <article class="stat-card"><span class="stat-label">Decisões pendentes</span><strong>00</strong><span class="stat-note">Aguardam a sua aprovação</span></article>
         </div>
 
         <div class="section-heading"><div><h2>Conselho de administração</h2><p class="muted">Diretores virtuais — perfis iniciais, ainda sem conexão com modelos de IA.</p></div><button class="text-btn" data-go="board">Ver todos →</button></div>
@@ -75,8 +76,21 @@
         </div>
         <div class="panel" id="taskList"></div>
       </section>
+      <section class="content hidden" id="decisionsView">
+        <div class="welcome-row">
+          <div><div class="eyebrow">GOVERNANÇA</div><h1>Decisões</h1><p class="muted">Propostas que só o dono da organização aprova ou rejeita. Uma decisão tomada não pode ser alterada.</p></div>
+          <button class="primary-btn" id="newDecisionBtn">＋ Nova decisão</button>
+        </div>
+        <div class="task-filters">
+          <button class="decision-filter active" data-filter="Pendente">Pendentes</button>
+          <button class="decision-filter" data-filter="Aprovada">Aprovadas</button>
+          <button class="decision-filter" data-filter="Rejeitada">Rejeitadas</button>
+          <button class="decision-filter" data-filter="Todas">Todas</button>
+        </div>
+        <div class="panel" id="decisionList"></div>
+      </section>
       <section class="content hidden" id="documentsView"><div class="welcome-row"><div><div class="eyebrow">CONHECIMENTO</div><h1>Documentos</h1><p class="muted">Área reservada para relatórios, decisões e arquivos dos projetos.</p></div></div><div class="empty-state"><div class="empty-icon">▤</div><h2>Biblioteca preparada</h2><p>Na próxima fase conectaremos armazenamento, pesquisa e histórico de versões.</p></div></section>
-      <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · <span id="footerVersion">v0.5.1</span> · Não executa agentes reais</span></footer>
+      <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · <span id="footerVersion">v0.6.0</span> · Não executa agentes reais</span></footer>
     </main>
   </div>
   <dialog id="projectDialog"><form method="dialog" id="projectForm"><div class="dialog-head"><div><div class="eyebrow">NOVO REGISTRO</div><h2>Criar projeto</h2></div><button class="icon-btn" value="cancel" aria-label="Fechar">×</button></div><label for="projectName">Nome do projeto</label><input id="projectName" maxlength="80" required placeholder="Ex.: Plataforma de mobilidade"><label for="projectDescription">Objetivo</label><textarea id="projectDescription" rows="3" placeholder="O que você pretende desenvolver?"></textarea><div class="dialog-actions"><button class="secondary-btn" value="cancel">Cancelar</button><button class="primary-btn" id="saveProjectBtn" value="default">Criar projeto</button></div></form></dialog>
@@ -102,6 +116,29 @@
       </div>
     </form>
   </dialog>
+  <dialog id="decisionDialog">
+    <form method="dialog" id="decisionForm">
+      <div class="dialog-head">
+        <div><div class="eyebrow">GOVERNANÇA</div><h2>Nova decisão</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <label for="decisionTitle">O que precisa ser decidido</label>
+      <input id="decisionTitle" maxlength="140" required placeholder="Ex.: Contratar o plano pago do Supabase">
+      <label for="decisionRationale">Justificativa</label>
+      <textarea id="decisionRationale" rows="3" maxlength="2000" placeholder="Por que esta decisão é necessária?"></textarea>
+      <label for="decisionProposer">Proposta por</label>
+      <select id="decisionProposer">
+        <option>Fundador</option><option>CEO</option><option>CFO</option><option>COO</option>
+        <option>CTO</option><option>CLO</option><option>CMO</option>
+        <option>CCO</option><option>CSO</option><option>CRO</option>
+      </select>
+      <div class="dialog-actions">
+        <button class="secondary-btn" value="cancel">Cancelar</button>
+        <button class="primary-btn" id="saveDecisionBtn" value="default">Registrar proposta</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="authDialog">
     <form method="dialog" id="authForm" novalidate>
       <div class="dialog-head">

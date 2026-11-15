@@ -86,3 +86,10 @@ Sem commits diretos no `main` (alterações por pull request), sem reconstruir o
 - Cargos decididos: CCO = Comunicação e clientes, CSO = Segurança, CRO = Receitas e crescimento (versão do handoff).
 - Esquema com RLS aplicado ao Supabase (6 tabelas, 0 avisos de segurança). O app ainda não o usa.
 - Pendentes: recuperar o trabalho do Codespace, rodar as credenciais da GitHub App, decidir sobre repositório privado e proteção do `main`.
+
+## Atualização (15/11/2026, noite)
+- App na v0.6.0: login, sincronização de projetos, tarefas e atividade com o Supabase, recuperação de senha e módulo de decisões com aprovação humana.
+- Conta do fundador criada; cadastro aberto desativado no Supabase.
+- Chave da GitHub App rodada pelo fundador (informado por ele; não verificável a partir do repositório).
+- Pendentes: verificação em dois passos no GitHub e no Supabase, proteção do `main`, decidir repositório privado, recuperar o trabalho antigo do Codespace (guardado em branches de backup locais e no stash).
+

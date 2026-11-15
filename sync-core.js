@@ -30,6 +30,21 @@ export function toTaskRow(task, organizationId) {
   };
 }
 
+export function toDecisionRow(decision, organizationId) {
+  // decided_by e decided_at não são enviados: o servidor preenche-os.
+  return {
+    id: decision.id,
+    organization_id: organizationId,
+    title: cut(decision.title, 140),
+    rationale: cut(decision.rationale, 2000),
+    proposed_by_role: decision.proposer,
+    status: decision.status,
+    decision_note: cut(decision.note, 1000),
+    created_at: decision.createdAt,
+    updated_at: decision.updatedAt
+  };
+}
+
 export function toActivityRow(activity, organizationId) {
   return {
     id: activity.id,
@@ -41,7 +56,7 @@ export function toActivityRow(activity, organizationId) {
   };
 }
 
-export function fromRows({ projects, tasks, activities }) {
+export function fromRows({ projects, tasks, activities, decisions = [] }) {
   return {
     version: 2,
     projects: projects.map(row => ({
@@ -67,6 +82,17 @@ export function fromRows({ projects, tasks, activities }) {
       type: row.type,
       message: row.message,
       createdAt: row.created_at
+    })),
+    decisions: decisions.map(row => ({
+      id: row.id,
+      title: row.title,
+      rationale: row.rationale,
+      proposer: row.proposed_by_role,
+      status: row.status,
+      note: row.decision_note,
+      decidedAt: row.decided_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }))
   };
 }
@@ -93,20 +119,23 @@ export async function pullState(client, organizationId) {
     if (limit) query = query.limit(limit);
     return query;
   };
-  const [projects, tasks, activities] = await Promise.all([
+  const [projects, tasks, activities, decisions] = await Promise.all([
     read("projects"),
     read("tasks"),
-    read("activities", "created_at", 100)
+    read("activities", "created_at", 100),
+    read("decisions")
   ]);
   return fromRows({
     projects: check("ler os projetos", projects),
     tasks: check("ler as tarefas", tasks),
-    activities: check("ler a atividade", activities)
+    activities: check("ler a atividade", activities),
+    decisions: check("ler as decisões", decisions)
   });
 }
 
 export function isEmptyState(state) {
-  return !state.projects.length && !state.tasks.length && !state.activities.length;
+  return !state.projects.length && !state.tasks.length && !state.activities.length &&
+    !(state.decisions?.length);
 }
 
 // Envia o estado local: grava projetos e tarefas, apaga os que já não existem
@@ -124,6 +153,25 @@ export async function pushState(client, organizationId, state, syncedActivityIds
   if (state.tasks.length) {
     check("gravar as tarefas", await client.from("tasks").upsert(
       state.tasks.map(item => toTaskRow(item, organizationId)),
+      { onConflict: "id" }
+    ));
+  }
+
+  // Decisões: nunca se apagam na nuvem (as tomadas são definitivas). As
+  // pendentes só são inseridas se ainda não existirem, para uma cópia local
+  // desatualizada não desfazer uma decisão tomada noutro dispositivo.
+  const decisions = state.decisions ?? [];
+  const pending = decisions.filter(item => item.status === "Pendente");
+  const decided = decisions.filter(item => item.status !== "Pendente");
+  if (pending.length) {
+    check("gravar as decisões", await client.from("decisions").upsert(
+      pending.map(item => toDecisionRow(item, organizationId)),
+      { onConflict: "id", ignoreDuplicates: true }
+    ));
+  }
+  if (decided.length) {
+    check("gravar as decisões", await client.from("decisions").upsert(
+      decided.map(item => toDecisionRow(item, organizationId)),
       { onConflict: "id" }
     ));
   }
@@ -149,5 +197,10 @@ export async function pushState(client, organizationId, state, syncedActivityIds
     ));
     for (const item of fresh) syncedActivityIds.add(item.id);
   }
-  return { projects: state.projects.length, tasks: state.tasks.length, newActivities: fresh.length };
+  return {
+    projects: state.projects.length,
+    tasks: state.tasks.length,
+    decisions: decisions.length,
+    newActivities: fresh.length
+  };
 }

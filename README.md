@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.5.1** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.6.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -60,6 +60,14 @@ Com a sessão iniciada, projetos, tarefas e atividade são copiados para o Supab
 - **Sem sessão:** tudo funciona só em modo local, como antes.
 - Código: `sync-core.js` (lógica, testada com cliente simulado) e `supabase-sync.js` (ligação à interface).
 - Limitação conhecida: sem resolução de conflitos entre dispositivos (vale o último envio).
+
+## Decisões (v0.6.0)
+Vista **Decisões**: qualquer diretor (ou o fundador) propõe; só o **dono** da organização aprova ou rejeita.
+- Quem decidiu e quando é preenchido pelo servidor (gatilho no banco), não pelo navegador.
+- Uma decisão tomada **não pode ser alterada nem apagada** (aplicado no banco e na interface).
+- O contador "Decisões pendentes" da visão geral é real.
+- Migração: `supabase/migrations/20261115210000_decisions.sql`, com testes RLS (dono decide, membro não, isolamento entre organizações).
+- Conflito entre dispositivos: se a mesma decisão for tomada de forma diferente em dois lugares, vale a primeira e a sincronização do outro mostra "Sem sincronização".
 
 ## Cargos
 | Código | Cargo |
