@@ -34,6 +34,16 @@ O projeto Supabase está ligado apenas ao nível da configuração. Os dados da 
 - `supabase-client.js` carrega `@supabase/supabase-js` de uma versão fixa (`SUPABASE_JS_VERSION`) e expõe `window.apexSupabase` (`client`, `validation`, `testConnection()`). Se a rede falhar, o dashboard continua a funcionar.
 - Antes de criar tabelas: ativar RLS em todas e validar com os avisos de segurança do Supabase. Não correr migrações sem rever o esquema.
 
+## Base de dados (esquema proposto)
+`supabase/migrations/20261115190000_core_schema.sql` define organizações, membros, diretores, projetos, tarefas e atividade, com **RLS em todas as tabelas**: cada utilizador só vê os dados das organizações a que pertence, o papel anónimo não tem acesso e a atividade é só de acrescentar.
+
+**Estado: proposta, ainda NÃO aplicada ao projeto Supabase.** O frontend continua a usar `localStorage`.
+
+- As políticas usam funções `SECURITY DEFINER` no esquema privado `private` (com `search_path` fixo) para evitar recursão entre políticas.
+- Para testar a base de dados, com um Postgres local (variáveis `PGHOST`, `PGUSER`, `PGPASSWORD`): `./scripts/test-rls.sh`. Cria uma base temporária, aplica as migrações e corre `supabase/tests/rls.test.sql` (dois utilizadores, escritas cruzadas, anónimo, restrições). O CI faz o mesmo num Postgres 16.
+- Os cargos CCO, CSO e CRO guardam só o código; o nome e a descrição são editáveis porque o significado ainda está por decidir.
+- Depois de aplicar uma migração ao Supabase, correr os avisos de segurança (`get_advisors`).
+
 ## Testes e qualidade
 Requer Node.js 22 ou superior, sem dependências a instalar.
 
@@ -48,6 +58,7 @@ Ao mudar a versão, atualize `APP_VERSION` em `app.js`, `VERSION` em `service-wo
 ```
 index.html, styles.css, app.js   interface e lógica
 supabase-config.js, supabase-client.js   ligação ao Supabase
+supabase/migrations, supabase/tests      esquema SQL com RLS e testes
 manifest.json, service-worker.js, icons/   PWA
 tests/                           testes (DOM simulado, sem dependências)
 scripts/quality-gate.mjs         verificações estáticas
