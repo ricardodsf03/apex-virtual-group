@@ -103,6 +103,45 @@ pass(
   "encontrado 'read -r -p' (comando de terminal) dentro de um ficheiro JavaScript"
 );
 
+// --- Migrações SQL: RLS obrigatória ---------------------------------------
+const migrationFiles = exists("supabase/migrations")
+  ? fs.readdirSync("supabase/migrations").filter(f => f.endsWith(".sql")).sort()
+  : [];
+const migrationsSql = migrationFiles
+  .map(f => read(`supabase/migrations/${f}`))
+  .join("\n")
+  .replace(/--.*$/gm, "");
+
+const tables = [...migrationsSql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?public\.(\w+)/gi)]
+  .map(m => m[1]);
+for (const table of tables) {
+  pass(
+    `RLS ativada na tabela ${table}`,
+    new RegExp(`alter\\s+table\\s+public\\.${table}\\s+enable\\s+row\\s+level\\s+security`, "i")
+      .test(migrationsSql)
+  );
+  pass(
+    `Tabela ${table} tem pelo menos uma política`,
+    new RegExp(`create\\s+policy\\s+\\w+\\s+on\\s+public\\.${table}\\b`, "i").test(migrationsSql)
+  );
+}
+const definers = migrationsSql.split(/create\s+(?:or\s+replace\s+)?function/i).slice(1)
+  .filter(body => /security\s+definer/i.test(body.split(/\$\$[\s\S]*?\$\$/)[0] + body.slice(0, 400)));
+pass(
+  "Funções SECURITY DEFINER fixam o search_path",
+  definers.every(body => /set\s+search_path/i.test(body.slice(0, 400))),
+  "uma função SECURITY DEFINER não define search_path"
+);
+pass(
+  "Migrações não dão acesso ao papel anon",
+  !/grant\s+[^;]*\bto\s+[^;]*\banon\b/i.test(migrationsSql),
+  "encontrado GRANT ... TO anon"
+);
+pass(
+  "Existem testes RLS para as migrações",
+  migrationFiles.length === 0 || exists("supabase/tests/rls.test.sql")
+);
+
 // --- Segurança básica -----------------------------------------------------
 const secretPattern =
   /(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|sb_secret_[A-Za-z0-9_-]{10,}|service_role|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
