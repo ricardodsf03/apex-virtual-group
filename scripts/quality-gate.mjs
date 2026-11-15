@@ -23,12 +23,12 @@ const supabaseAuth = read("supabase-auth.js");
 const authCore = read("auth-core.js");
 const manifest = json("manifest.json");
 
-// --- Ficheiros base -------------------------------------------------------
+// --- Arquivos base -------------------------------------------------------
 pass("app.js existe e não está vazio", app.length > 0);
 pass("index.html existe e não está vazio", html.length > 0);
 pass("styles.css existe e não está vazio", css.length > 0);
-pass("HTML liga ao app.js", /app\.js/.test(html));
-pass("HTML liga ao styles.css", /styles\.css/.test(html));
+pass("HTML referencia o app.js", /app\.js/.test(html));
+pass("HTML referencia o styles.css", /styles\.css/.test(html));
 
 const syntax = spawnSync("node", ["--check", "app.js"], { encoding: "utf8" });
 pass("Sintaxe JavaScript válida (app.js)", syntax.status === 0, syntax.stderr?.trim());
@@ -41,16 +41,16 @@ pass("Persistência local implementada", /localStorage/.test(app));
 pass("Chave de armazenamento definida", /STORAGE_KEY/.test(app));
 pass("Carregamento de estado implementado", /function\s+loadState/.test(app));
 pass("Gravação de estado implementada", /function\s+saveState/.test(app));
-pass("Registo de atividades implementado", /function\s+logActivity/.test(app));
+pass("Registro de atividades implementado", /function\s+logActivity/.test(app));
 pass("Renderização de tarefas implementada", /renderTasks/.test(app));
-pass("Lista de tarefas ligada ao HTML", /taskList/.test(html));
+pass("Lista de tarefas conectada ao HTML", /taskList/.test(html));
 
 // --- Consistência de versão ----------------------------------------------
 const appVersion = app.match(/APP_VERSION\s*=\s*"([^"]+)"/)?.[1];
 const swVersion = sw.match(/VERSION\s*=\s*"([^"]+)"/)?.[1];
 pass("APP_VERSION definida em app.js", appVersion, "não encontrada");
 pass(
-  "Versão do service worker igual à da app",
+  "Versão do service worker igual à do app",
   appVersion && appVersion === swVersion,
   `app.js=${appVersion} service-worker.js=${swVersion}`
 );
@@ -76,7 +76,7 @@ pass("apple-touch-icon existe", exists("icons/apple-touch-icon.png"));
 
 const precached = [...new Set([...sw.matchAll(/"\.\/([^"]+)"/g)].map(m => m[1]))];
 for (const file of precached) {
-  pass(`Ficheiro em cache existe: ${file}`, exists(file));
+  pass(`Arquivo em cache existe: ${file}`, exists(file));
 }
 
 // --- Supabase -------------------------------------------------------------
@@ -100,9 +100,9 @@ pass(
   "o HTML tem de carregar supabase-config.js e depois supabase-client.js (module)"
 );
 pass(
-  "Ficheiros Supabase sem comandos de terminal",
+  "Arquivos Supabase sem comandos de terminal",
   !/read\s+-r\s+-p/.test(supabaseConfig + supabaseClient),
-  "encontrado 'read -r -p' (comando de terminal) dentro de um ficheiro JavaScript"
+  "encontrado 'read -r -p' (comando de terminal) dentro de um arquivo JavaScript"
 );
 
 // --- Migrações SQL: RLS obrigatória ---------------------------------------

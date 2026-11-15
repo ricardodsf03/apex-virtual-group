@@ -9,9 +9,9 @@ const agents = [
   {role:"CTO",name:"Diretor de Tecnologia",desc:"Define arquitetura, desenvolvimento, integrações e qualidade técnica.",icon:"⌘"},
   {role:"CLO",name:"Diretor Jurídico",desc:"Identifica requisitos legais, contratos, conformidade e riscos jurídicos.",icon:"§"},
   {role:"CMO",name:"Diretor de Marketing",desc:"Trabalha posicionamento, marca, campanhas e aquisição de clientes.",icon:"✳"},
-  {role:"CCO",name:"Diretor de Comunicação e Clientes",desc:"Gere a relação com clientes, o atendimento, o sucesso do cliente e a comunicação institucional.",icon:"✉"},
+  {role:"CCO",name:"Diretor de Comunicação e Clientes",desc:"Gerencia a relação com clientes, o atendimento, o sucesso do cliente e a comunicação institucional.",icon:"✉"},
   {role:"CSO",name:"Diretor de Segurança",desc:"Protege sistemas, dados e acessos, e acompanha riscos, auditoria e continuidade do negócio.",icon:"⬡"},
-  {role:"CRO",name:"Diretor de Receitas e Crescimento",desc:"Gere vendas, parcerias, canais e o crescimento da receita.",icon:"↗"}
+  {role:"CRO",name:"Diretor de Receitas e Crescimento",desc:"Gerencia vendas, parcerias, canais e o crescimento da receita.",icon:"↗"}
 ];
 window.APEX_AGENTS = agents;
 
@@ -79,8 +79,8 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     return true;
   } catch (error) {
-    console.error("Apex: não foi possível guardar os dados.", error);
-    alert("Não foi possível guardar. Verifica o espaço disponível no navegador.");
+    console.error("Apex: não foi possível salvar os dados.", error);
+    alert("Não foi possível salvar. Verifique o espaço disponível no navegador.");
     return false;
   }
 }
@@ -101,7 +101,7 @@ function escapeHtml(value) {
 }
 
 function formatDate(value) {
-  return new Date(value).toLocaleString("pt-PT", {
+  return new Date(value).toLocaleString("pt-BR", {
     day:"2-digit", month:"2-digit",
     hour:"2-digit", minute:"2-digit"
   });
@@ -113,7 +113,7 @@ const agentCard = agent => `
     <div>
       <h3>${agent.role} · ${agent.name}</h3>
       <p>${agent.desc}</p>
-      <div class="agent-meta"><b>● Perfil preparado</b> · IA não ligada</div>
+      <div class="agent-meta"><b>● Perfil preparado</b> · IA não conectada</div>
     </div>
   </article>`;
 
@@ -124,7 +124,7 @@ function renderAgents() {
 
 function renderHeader() {
   const weekday = new Date()
-    .toLocaleDateString("pt-PT", { weekday:"long" })
+    .toLocaleDateString("pt-BR", { weekday:"long" })
     .toUpperCase();
   $("#todayLabel").textContent = `${weekday} · WORKSPACE`;
   $("#appVersion").textContent = `v${APP_VERSION}`;
@@ -170,7 +170,7 @@ function renderTasks() {
             `<option ${task.status === status ? "selected" : ""}>${status}</option>`
           ).join("")}
         </select>
-        <button class="task-delete" data-task-delete="${escapeHtml(task.id)}">Eliminar</button>
+        <button class="task-delete" data-task-delete="${escapeHtml(task.id)}">Excluir</button>
       </div>
     </div>`).join("") || "<p class='muted'>Não existem tarefas nesta categoria.</p>";
 }
@@ -268,12 +268,12 @@ $("#saveProjectBtn").addEventListener("click", event => {
   const description = $("#projectDescription").value.trim();
 
   if (!name) {
-    alert("Indica o nome do projeto.");
+    alert("Informe o nome do projeto.");
     return;
   }
 
   const duplicate = state.projects.some(project =>
-    project.name.toLocaleLowerCase("pt-PT") === name.toLocaleLowerCase("pt-PT")
+    project.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR")
   );
 
   if (duplicate) {
@@ -319,7 +319,7 @@ $("#saveTaskBtn").addEventListener("click", event => {
   const owner = $("#taskOwner").value;
 
   if (!title) {
-    alert("Escreve a descrição da tarefa.");
+    alert("Escreva a descrição da tarefa.");
     return;
   }
 
@@ -368,10 +368,10 @@ $("#taskList").addEventListener("click", event => {
 
   const task = state.tasks.find(item => item.id === id);
   if (!task) return;
-  if (!confirm(`Eliminar a tarefa "${task.title}"?`)) return;
+  if (!confirm(`Excluir a tarefa "${task.title}"?`)) return;
 
   state.tasks = state.tasks.filter(item => item.id !== id);
-  logActivity("Fundador", `Eliminou a tarefa "${task.title}".`);
+  logActivity("Fundador", `Excluiu a tarefa "${task.title}".`);
 
   if (!saveState()) return;
   renderAll();

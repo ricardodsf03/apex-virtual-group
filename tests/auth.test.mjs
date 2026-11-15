@@ -70,7 +70,7 @@ function fakeClient({ failOn = null, tables = {} } = {}) {
   };
 }
 
-test("valida e-mail e palavra-passe", () => {
+test("valida e-mail e senha", () => {
   assert.equal(validateCredentials("", "x", "signin").ok, false);
   assert.equal(validateCredentials("sem-arroba", "x", "signin").ok, false);
   assert.equal(validateCredentials("a@b.pt", "", "signin").ok, false);
@@ -78,7 +78,7 @@ test("valida e-mail e palavra-passe", () => {
   assert.deepEqual({ ...ok }, { ok: true, email: "a@b.pt" });
 });
 
-test("ao criar conta exige palavra-passe longa; ao entrar não", () => {
+test("ao criar conta exige senha longa; ao entrar não", () => {
   const short = "a".repeat(MIN_PASSWORD_LENGTH - 1);
   assert.equal(validateCredentials("a@b.pt", short, "signup").ok, false);
   assert.equal(validateCredentials("a@b.pt", short, "signin").ok, true);
@@ -88,14 +88,14 @@ test("ao criar conta exige palavra-passe longa; ao entrar não", () => {
 test("erros do Supabase viram mensagens em português sem detalhes internos", () => {
   assert.match(friendlyAuthError({ code: "invalid_credentials" }), /incorretos/);
   assert.match(friendlyAuthError({ message: "Invalid login credentials" }), /incorretos/);
-  assert.match(friendlyAuthError({ code: "email_not_confirmed" }), /Confirma/);
+  assert.match(friendlyAuthError({ code: "email_not_confirmed" }), /Confirme/);
   assert.match(friendlyAuthError({ code: "user_already_exists" }), /Já existe/);
   assert.match(friendlyAuthError({ code: "signup_disabled" }), /desativada/);
-  assert.match(friendlyAuthError({ code: "over_email_send_rate_limit" }), /Demasiados/);
-  assert.match(friendlyAuthError(new TypeError("Failed to fetch")), /ligação/);
+  assert.match(friendlyAuthError({ code: "over_email_send_rate_limit" }), /Muitas/);
+  assert.match(friendlyAuthError(new TypeError("Failed to fetch")), /conexão/);
   const unknown = friendlyAuthError({ message: "SELECT * FROM secrets failed at 10.0.0.5" });
   assert.ok(!/secrets|10\.0\.0\.5/.test(unknown));
-  assert.match(friendlyAuthError(null), /Tenta de novo/);
+  assert.match(friendlyAuthError(null), /Tente de novo/);
 });
 
 test("primeira vez: cria organização, membro owner e os 9 diretores", async () => {
@@ -159,7 +159,7 @@ test("erros em cada passo ficam com mensagem clara e causa original", async () =
   const steps = [
     [{ table: "organization_members", op: "select" }, /ler as organizações/],
     [{ table: "organizations", op: "insert" }, /criar a organização/],
-    [{ table: "organization_members", op: "upsert" }, /registar o membro/],
+    [{ table: "organization_members", op: "upsert" }, /registrar o membro/],
     [{ table: "directors", op: "upsert" }, /criar os diretores/]
   ];
   for (const [failOn, pattern] of steps) {
@@ -171,7 +171,7 @@ test("erros em cada passo ficam com mensagem clara e causa original", async () =
   }
 });
 
-test("sem utilizador não faz nenhum pedido", async () => {
+test("sem usuário não faz nenhum pedido", async () => {
   const client = fakeClient();
   await assert.rejects(ensureOrganization(client, { userId: "", directors: DIRECTORS }));
   assert.equal(client.calls.length, 0);

@@ -4,20 +4,20 @@
 export const MIN_PASSWORD_LENGTH = 12;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// mode: "signin" | "signup". Ao criar conta exige-se uma palavra-passe longa.
+// mode: "signin" | "signup". Ao criar conta, exige uma senha longa.
 export function validateCredentials(email, password, mode) {
   const cleanEmail = String(email ?? "").trim();
   if (!EMAIL_RE.test(cleanEmail)) {
-    return { ok: false, error: "Indica um e-mail válido." };
+    return { ok: false, error: "Informe um e-mail válido." };
   }
   const secret = String(password ?? "");
   if (!secret) {
-    return { ok: false, error: "Indica a palavra-passe." };
+    return { ok: false, error: "Informe a senha." };
   }
   if (mode === "signup" && secret.length < MIN_PASSWORD_LENGTH) {
     return {
       ok: false,
-      error: `A palavra-passe deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
+      error: `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
     };
   }
   return { ok: true, email: cleanEmail };
@@ -29,40 +29,40 @@ export function friendlyAuthError(error) {
   const message = String(error?.message ?? "").toLowerCase();
 
   if (code === "invalid_credentials" || message.includes("invalid login")) {
-    return "E-mail ou palavra-passe incorretos.";
+    return "E-mail ou senha incorretos.";
   }
   if (code === "email_not_confirmed" || message.includes("not confirmed")) {
-    return "Confirma primeiro o e-mail (vê a caixa de entrada) e volta a entrar.";
+    return "Confirme primeiro o e-mail (veja a caixa de entrada) e entre de novo.";
   }
   if (code === "user_already_exists" || message.includes("already registered")) {
-    return "Já existe uma conta com este e-mail. Usa Entrar.";
+    return "Já existe uma conta com este e-mail. Use Entrar.";
   }
   if (code === "signup_disabled" || message.includes("signups not allowed")) {
     return "A criação de contas está desativada.";
   }
   if (code.includes("rate_limit") || message.includes("rate limit")) {
-    return "Demasiados pedidos. Espera um pouco e tenta de novo.";
+    return "Muitas tentativas. Espere um pouco e tente de novo.";
   }
   if (code === "weak_password" || message.includes("password")) {
-    return "Palavra-passe fraca ou inválida. Usa uma mais longa.";
+    return "Senha fraca ou inválida. Use uma mais longa.";
   }
   if (message.includes("fetch") || message.includes("network")) {
-    return "Sem ligação ao Supabase. Verifica a rede.";
+    return "Sem conexão com o Supabase. Verifique a rede.";
   }
-  return "Não foi possível concluir. Tenta de novo.";
+  return "Não foi possível concluir. Tente de novo.";
 }
 
 function fail(step, error) {
-  const wrapped = new Error(`Falhou ao ${step}.`);
+  const wrapped = new Error(`Falha ao ${step}.`);
   wrapped.cause = error;
   return wrapped;
 }
 
-// Garante que o utilizador tem uma organização e que os 9 diretores existem.
+// Garante que o usuário tem uma organização e que os 9 diretores existem.
 // É idempotente: pode correr em cada início de sessão sem duplicar nada, e
 // recupera de uma execução anterior interrompida a meio.
 export async function ensureOrganization(client, { userId, directors, name = "Apex Virtual Group" }) {
-  if (!userId) throw fail("identificar o utilizador", null);
+  if (!userId) throw fail("identificar o usuário", null);
 
   let organizationId = null;
   let created = false;
@@ -76,7 +76,7 @@ export async function ensureOrganization(client, { userId, directors, name = "Ap
   if (memberships.data.length) organizationId = memberships.data[0].organization_id;
 
   if (!organizationId) {
-    // Organização criada por este utilizador numa tentativa anterior incompleta.
+    // Organização criada por este usuário numa tentativa anterior incompleta.
     const own = await client
       .from("organizations")
       .select("id")
@@ -101,7 +101,7 @@ export async function ensureOrganization(client, { userId, directors, name = "Ap
       { organization_id: organizationId, user_id: userId, role: "owner" },
       { onConflict: "organization_id,user_id", ignoreDuplicates: true }
     );
-    if (member.error) throw fail("registar o membro", member.error);
+    if (member.error) throw fail("registrar o membro", member.error);
   }
 
   const rows = directors.map(director => ({

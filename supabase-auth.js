@@ -1,6 +1,6 @@
 // Interface de autenticação (módulo ES). Depende de supabase-client.js e
 // de auth-core.js. Se o Supabase não estiver disponível, o dashboard local
-// continua a funcionar e o botão de entrada fica desativado.
+// continua funcionando e o botão de entrada fica desativado.
 import { validateCredentials, friendlyAuthError, ensureOrganization } from "./auth-core.js";
 
 const $ = selector => document.querySelector(selector);
@@ -41,7 +41,7 @@ function renderAccount(session, note = "") {
 // Prepara a organização e os diretores da conta, sem bloquear a interface.
 async function prepareOrganization(session) {
   const userId = session.user.id;
-  renderAccount(session, "a preparar…");
+  renderAccount(session, "preparando…");
   try {
     const directors = window.APEX_AGENTS ?? [];
     const result = await ensureOrganization(client, { userId, directors });
@@ -74,7 +74,7 @@ async function submit(mode) {
     return;
   }
   setBusy(true);
-  setMessage(mode === "signup" ? "A criar conta…" : "A entrar…");
+  setMessage(mode === "signup" ? "Criando conta…" : "Entrando…");
   try {
     const credentials = { email: checked.email, password: passwordInput.value };
     const { data, error } = mode === "signup"
@@ -86,7 +86,7 @@ async function submit(mode) {
       return;
     }
     if (mode === "signup" && !data?.session) {
-      setMessage("Conta criada. Confirma o e-mail e depois usa Entrar.", "info");
+      setMessage("Conta criada. Confirme o e-mail e depois use Entrar.", "info");
       return;
     }
     passwordInput.value = "";

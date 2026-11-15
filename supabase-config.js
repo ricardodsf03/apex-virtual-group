@@ -1,9 +1,9 @@
 // Configuração pública do Supabase para o frontend.
 //
 // A "publishable key" foi desenhada para ser pública: quem protege os dados
-// são as políticas RLS da base de dados, não o segredo desta chave.
-// NUNCA colocar neste ficheiro chaves secretas do Supabase (as de "service
-// role" ou as que começam por "sb" + "_secret"), a palavra-passe da base de
+// são as políticas RLS do banco de dados, não o segredo desta chave.
+// NUNCA colocar neste arquivo chaves secretas do Supabase (as de "service
+// role" ou as que começam por "sb" + "_secret"), a senha do banco de
 // dados, tokens ou comandos de terminal. Só JavaScript.
 (function () {
   const config = Object.freeze({

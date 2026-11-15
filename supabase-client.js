@@ -1,6 +1,6 @@
 // Cliente Supabase da Apex (módulo ES).
 // Carrega a biblioteca oficial de uma versão fixa e expõe window.apexSupabase.
-// Se a rede ou a biblioteca falharem, o dashboard continua a funcionar.
+// Se a rede ou a biblioteca falharem, o dashboard continua funcionando.
 
 const SUPABASE_JS_VERSION = "2.109.0";
 const SUPABASE_JS_URL =
@@ -70,11 +70,11 @@ async function init() {
 
   const result = await api.testConnection();
   if (!result.ok) {
-    setStatus("warn", "Supabase: sem ligação");
+    setStatus("warn", "Supabase: sem conexão");
   } else if (!client) {
     setStatus("warn", "Supabase: biblioteca indisponível");
   } else {
-    setStatus("ok", "Supabase: ligado");
+    setStatus("ok", "Supabase: conectado");
   }
   window.dispatchEvent(new CustomEvent("apex:supabase-ready", { detail: result }));
 }
