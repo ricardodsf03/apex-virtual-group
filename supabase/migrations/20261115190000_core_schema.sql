@@ -1,8 +1,7 @@
 -- Apex Virtual Group: esquema base com RLS por organização.
 --
--- ESTADO: proposta para revisão. NÃO foi aplicada ao projeto Supabase.
--- Aplicar só depois de rever este ficheiro e de correr os avisos de
--- segurança (get_advisors) a seguir à migração.
+-- ESTADO: aplicada ao projeto Supabase em 15/11/2026 (migração "core_schema").
+-- Após aplicar: 6 tabelas com RLS e 0 avisos de segurança (get_advisors).
 --
 -- Modelo: um utilizador (auth.users) pertence a uma ou mais organizações.
 -- Todos os dados de negócio pertencem a uma organização e só são visíveis
@@ -48,7 +47,8 @@ create index organization_members_user_idx
 
 -- ---------------------------------------------------------------------------
 -- Diretores (os 9 cargos). O código do cargo é fixo; nome e descrição são
--- dados editáveis, porque o significado de CCO, CSO e CRO ainda está por decidir.
+-- dados editáveis. CCO = Comunicação e clientes, CSO = Segurança,
+-- CRO = Receitas e crescimento.
 -- ---------------------------------------------------------------------------
 create table public.directors (
   id              uuid primary key default gen_random_uuid(),

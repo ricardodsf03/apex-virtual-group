@@ -90,3 +90,12 @@ test("o cliente carrega uma versão fixa da biblioteca", () => {
   assert.match(client, /SUPABASE_JS_VERSION = "\d+\.\d+\.\d+"/);
   assert.ok(!/supabase-js@(latest|\^|~|\d+\/)/.test(client));
 });
+
+test("os cargos da app coincidem com os códigos aceites pela base de dados", () => {
+  const appCodes = [...read("app.js").matchAll(/role:"([A-Z]{3})"/g)].map(m => m[1]).sort();
+  const sql = read("supabase/migrations/20261115190000_core_schema.sql");
+  const block = sql.match(/role_code\s+text not null check \(role_code in\s*\(([^)]*)\)/)[1];
+  const dbCodes = [...block.matchAll(/'([A-Z]{3})'/g)].map(m => m[1]).sort();
+  assert.equal(appCodes.length, 9);
+  assert.deepEqual(appCodes, dbCodes);
+});
