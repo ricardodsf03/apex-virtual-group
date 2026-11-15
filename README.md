@@ -1,29 +1,48 @@
-# Apex Virtual Group — Starter
+# Apex Virtual Group
 
-Primeiro protótipo responsivo da interface da Apex Virtual Group, pensado para iPadOS e computadores.
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.2.0** ("Apex Core").
 
 ## O que já existe
-- Dashboard responsivo com alternância entre Centro de Comando e Escritório (vista conceptual).
-- Cartões dos nove diretores iniciais.
-- Lista de projetos e tarefas demonstrativas.
-- Estados claramente identificados como dados de demonstração.
-- Manifesto PWA e service worker básico.
+- Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
+- Nove diretores virtuais (CEO, CFO, COO, CTO, CLO, CMO, CCO, CSO, CRO) como perfis. **Não há IA ligada.**
+- **Persistência local:** projetos, tarefas e atividade ficam guardados no `localStorage` do navegador (chave `apex.core.v02`). Os dados validam-se ao carregar e, se estiverem corrompidos, volta-se ao estado inicial.
+- **Projetos:** criação com validação de nome vazio e duplicado.
+- **Tarefas:** criar, atribuir a um diretor, mudar o estado (Por iniciar, Em curso, Concluída), eliminar com confirmação e filtrar por estado.
+- **Atividade recente:** histórico local das últimas 100 ações.
+- **PWA:** manifesto com ícones e service worker que funciona offline (incluindo as fontes depois da primeira visita).
+- **Controlo de qualidade:** testes automáticos e um quality gate executados no GitHub Actions em cada push e pull request.
+
+Os dois projetos e as seis tarefas iniciais são exemplos. Os dados ficam apenas neste dispositivo e navegador, sem sincronização.
 
 ## O que ainda NÃO está ligado
-Este starter é apenas a primeira camada visual. Ainda não existem agentes de IA reais, autenticação, base de dados, memória persistente, execução em segundo plano ou integração com APIs. Não introduza chaves secretas no frontend.
+Não existem agentes de IA reais, autenticação, base de dados, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
 
-## Executar num ambiente cloud pelo iPad
-1. Crie uma conta GitHub, se ainda não tiver.
-2. Crie um repositório privado chamado `apex-virtual-group`.
-3. Carregue o conteúdo desta pasta para o repositório (pode carregar os ficheiros pelo site GitHub no Safari).
-4. No GitHub, abra o repositório e escolha **Code → Codespaces → Create codespace on main** (se disponível na sua conta).
-5. No terminal do Codespaces, execute:
-   ```bash
-   python3 -m http.server 8000 --directory .
-   ```
-6. Abra a porta 8000 no separador **Ports** do Codespaces e escolha abrir no browser.
+## Executar localmente
+```bash
+python3 -m http.server 8000 --directory .
+```
+Abra `http://localhost:8000`. Num Codespace, abra a porta 8000 no separador **Ports**.
 
-Também pode publicar esta primeira interface estática num serviço de hosting compatível com sites estáticos. Para produção, configurar domínio, HTTPS e políticas de segurança.
+Também pode publicar esta interface estática em qualquer hosting de sites estáticos. Para produção, configure domínio, HTTPS e políticas de segurança.
+
+## Testes e qualidade
+Requer Node.js 22 ou superior, sem dependências a instalar.
+
+```bash
+node --test tests/app.test.mjs   # testes de comportamento (estado, tarefas, projetos, escape de HTML)
+node scripts/quality-gate.mjs    # estrutura, versões coerentes, PWA e segredos
+```
+
+Ao mudar a versão, atualize `APP_VERSION` em `app.js`, `VERSION` em `service-worker.js` e este README. O quality gate falha se ficarem desalinhados.
+
+## Estrutura
+```
+index.html, styles.css, app.js   interface e lógica
+manifest.json, service-worker.js, icons/   PWA
+tests/                           testes (DOM simulado, sem dependências)
+scripts/quality-gate.mjs         verificações estáticas
+.github/workflows/               CI
+```
 
 ## Próximas etapas técnicas
 1. Criar backend FastAPI e autenticação.
@@ -31,7 +50,7 @@ Também pode publicar esta primeira interface estática num serviço de hosting 
 3. Implementar o CEO-orquestrador e os agentes especializados.
 4. Implementar filas duráveis para tarefas longas.
 5. Integrar fornecedores de modelos de IA através do backend.
-6. Ligar dashboard a dados reais.
+6. Ligar o dashboard a dados reais e criar o módulo de decisões.
 7. Construir a experiência 3D com React Three Fiber numa fase posterior.
 
 ## Segurança

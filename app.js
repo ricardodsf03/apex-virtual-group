@@ -1,5 +1,6 @@
+const APP_VERSION = "0.2.0";
 const STORAGE_KEY = "apex.core.v02";
-const $ = (selector) => document.querySelector(selector);
+const $ =(selector) => document.querySelector(selector);
 
 const agents = [
   {role:"CEO",name:"Diretor Executivo",desc:"Coordena o conselho, prioridades, projetos e distribuição de trabalho.",icon:"♛"},
@@ -44,7 +45,7 @@ function createInitialState() {
     })),
     activities: [{
       id:makeId(), type:"system", actor:"Sistema",
-      message:"Apex Core 0.2 inicializado.",
+      message:`Apex Core ${APP_VERSION} inicializado.`,
       createdAt:now
     }]
   };
@@ -105,28 +106,28 @@ function formatDate(value) {
   });
 }
 
+const agentCard = agent => `
+  <article class="agent-card">
+    <div class="agent-icon">${agent.icon}</div>
+    <div>
+      <h3>${agent.role} · ${agent.name}</h3>
+      <p>${agent.desc}</p>
+      <div class="agent-meta"><b>● Perfil preparado</b> · IA não ligada</div>
+    </div>
+  </article>`;
+
 function renderAgents() {
-  const html = agents.map(agent => `
-    <article class="agent-card">
-      <div class="agent-icon">${agent.icon}</div>
-      <div>
-        <h3>${agent.role} · ${agent.name}</h3>
-        <p>${agent.desc}</p>
-        <div class="agent-meta"><b>● Perfil preparado</b> · IA não ligada</div>
-      </div>
-    </article>`).join("");
+  $("#agentsGrid").innerHTML = agents.slice(0,6).map(agentCard).join("");
+  $("#allAgents").innerHTML = agents.map(agentCard).join("");
+}
 
-  $("#agentsGrid").innerHTML = agents.slice(0,6).map(agent => `
-    <article class="agent-card">
-      <div class="agent-icon">${agent.icon}</div>
-      <div>
-        <h3>${agent.role} · ${agent.name}</h3>
-        <p>${agent.desc}</p>
-        <div class="agent-meta"><b>● Perfil preparado</b> · IA não ligada</div>
-      </div>
-    </article>`).join("");
-
-  $("#allAgents").innerHTML = html;
+function renderHeader() {
+  const weekday = new Date()
+    .toLocaleDateString("pt-PT", { weekday:"long" })
+    .toUpperCase();
+  $("#todayLabel").textContent = `${weekday} · WORKSPACE`;
+  $("#appVersion").textContent = `v${APP_VERSION}`;
+  $("#footerVersion").textContent = `v${APP_VERSION}`;
 }
 
 function renderProjects() {
@@ -174,7 +175,7 @@ function renderTasks() {
 }
 
 function renderActivities() {
-  const panel = document.querySelector(".lower-grid .panel:nth-child(2)");
+  const panel = $("#activityPanel");
   if (!panel) return;
 
   const colors = ["", "purple", "amber"];
@@ -205,14 +206,10 @@ function renderStats() {
       if (values[index] !== undefined) element.textContent =
         String(values[index]).padStart(2,"0");
     });
-
-  const notes = document.querySelectorAll(".stats-grid .stat-note");
-  if (notes[1]) notes[1].textContent = "Registos guardados";
-  if (notes[2]) notes[2].textContent = "Tarefas não concluídas";
-  if (notes[3]) notes[3].textContent = "Sem módulo de decisões ligado";
 }
 
 function renderAll() {
+  renderHeader();
   renderAgents();
   renderProjects();
   renderTasks();
