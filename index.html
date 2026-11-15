@@ -55,12 +55,46 @@
 
       <section class="content hidden" id="boardView"><div class="welcome-row"><div><div class="eyebrow">ESTRUTURA ORGANIZACIONAL</div><h1>Conselho de administração</h1><p class="muted">Perfis e responsabilidades propostos para a primeira versão.</p></div></div><div class="agents-grid board-grid" id="allAgents"></div></section>
       <section class="content hidden" id="projectsView"><div class="welcome-row"><div><div class="eyebrow">PORTFÓLIO</div><h1>Projetos</h1><p class="muted">Os exemplos abaixo são demonstrativos e podem ser substituídos.</p></div><button class="primary-btn" id="newProjectBtn2">＋ Novo projeto</button></div><div id="allProjects" class="project-grid"></div></section>
-      <section class="content hidden" id="tasksView"><div class="welcome-row"><div><div class="eyebrow">EXECUÇÃO</div><h1>Tarefas</h1><p class="muted">Fila ilustrativa — ainda sem execução autónoma.</p></div></div><div class="panel" id="taskList"></div></section>
+      <section class="content hidden" id="tasksView">
+        <div class="welcome-row">
+          <div><div class="eyebrow">EXECUÇÃO</div><h1>Tarefas</h1><p class="muted">Gestão local de tarefas, responsáveis e estados.</p></div>
+          <button class="primary-btn" id="newTaskBtn">＋ Nova tarefa</button>
+        </div>
+        <div class="task-filters">
+          <button class="task-filter active" data-filter="Todas">Todas</button>
+          <button class="task-filter" data-filter="Por iniciar">Por iniciar</button>
+          <button class="task-filter" data-filter="Em curso">Em curso</button>
+          <button class="task-filter" data-filter="Concluída">Concluídas</button>
+        </div>
+        <div class="panel" id="taskList"></div>
+      </section>
       <section class="content hidden" id="documentsView"><div class="welcome-row"><div><div class="eyebrow">CONHECIMENTO</div><h1>Documentos</h1><p class="muted">Área reservada para relatórios, decisões e ficheiros dos projetos.</p></div></div><div class="empty-state"><div class="empty-icon">▤</div><h2>Biblioteca preparada</h2><p>Na próxima fase ligaremos armazenamento, pesquisa e histórico de versões.</p></div></section>
       <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · v0.1.0 · Não executa agentes reais</span></footer>
     </main>
   </div>
   <dialog id="projectDialog"><form method="dialog" id="projectForm"><div class="dialog-head"><div><div class="eyebrow">NOVO REGISTO</div><h2>Criar projeto</h2></div><button class="icon-btn" value="cancel" aria-label="Fechar">×</button></div><label for="projectName">Nome do projeto</label><input id="projectName" maxlength="80" required placeholder="Ex.: Plataforma de mobilidade"><label for="projectDescription">Objetivo</label><textarea id="projectDescription" rows="3" placeholder="O que pretendes desenvolver?"></textarea><div class="dialog-actions"><button class="secondary-btn" value="cancel">Cancelar</button><button class="primary-btn" id="saveProjectBtn" value="default">Criar projeto</button></div></form></dialog>
+
+  <dialog id="taskDialog">
+    <form method="dialog" id="taskForm">
+      <div class="dialog-head">
+        <div><div class="eyebrow">EXECUÇÃO</div><h2>Nova tarefa</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <label for="taskTitle">Descrição da tarefa</label>
+      <input id="taskTitle" maxlength="140" required placeholder="Ex.: Preparar análise de mercado">
+      <label for="taskOwner">Responsável</label>
+      <select id="taskOwner">
+        <option>CEO</option><option>CFO</option><option>COO</option>
+        <option>CTO</option><option>CLO</option><option>CMO</option>
+        <option>CCO</option><option>CSO</option><option>CRO</option>
+        <option>Fundador</option>
+      </select>
+      <div class="dialog-actions">
+        <button class="secondary-btn" value="cancel">Cancelar</button>
+        <button class="primary-btn" id="saveTaskBtn" value="default">Criar tarefa</button>
+      </div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
   <script>if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(()=>{}));</script>
 </body>
