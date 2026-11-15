@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.4.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.5.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -50,6 +50,15 @@ O projeto Supabase está conectado apenas no nível da configuração. Os dados 
 - Para testar o banco de dados com um Postgres local (variáveis `PGHOST`, `PGUSER`, `PGPASSWORD`): `./scripts/test-rls.sh`. Cria um banco temporário, aplica as migrações e corre `supabase/tests/rls.test.sql` (dois usuários, escritas cruzadas, anônimo, restrições). O CI faz o mesmo num Postgres 16.
 - Convites de membros não estão incluídos: hoje só o criador da organização pode ser membro. Serão uma migração à parte, com fluxo feito no servidor.
 - Depois de aplicar uma nova migração ao Supabase, correr os avisos de segurança (`get_advisors`).
+
+## Sincronização (v0.5.0)
+Com a sessão iniciada, projetos, tarefas e atividade são copiados para o Supabase (organização do usuário, protegida por RLS).
+- **Primeira entrada:** se a organização está vazia, os dados locais são enviados.
+- **Entradas seguintes:** o estado da nuvem substitui a cópia local (alterações locais feitas sem sessão e ainda não enviadas são perdidas).
+- **Depois de cada alteração:** envio automático (cerca de 0,6 s depois). Sem rede ou com erro, o app continua com os dados locais e mostra "Sem sincronização".
+- **Sem sessão:** tudo funciona só em modo local, como antes.
+- Código: `sync-core.js` (lógica, testada com cliente simulado) e `supabase-sync.js` (ligação à interface).
+- Limitação conhecida: sem resolução de conflitos entre dispositivos (vale o último envio).
 
 ## Cargos
 | Código | Cargo |
