@@ -21,6 +21,8 @@ const supabaseConfig = read("supabase-config.js");
 const supabaseClient = read("supabase-client.js");
 const supabaseAuth = read("supabase-auth.js");
 const authCore = read("auth-core.js");
+const syncCore = read("sync-core.js");
+const supabaseSync = read("supabase-sync.js");
 const manifest = json("manifest.json");
 
 // --- Arquivos base -------------------------------------------------------
@@ -87,7 +89,7 @@ try {
 const supabaseValidation =
   supabaseWindow.apexValidateSupabaseConfig?.(supabaseWindow.APEX_SUPABASE_CONFIG) ?? {};
 
-for (const file of ["supabase-config.js", "supabase-client.js", "supabase-auth.js", "auth-core.js"]) {
+for (const file of ["supabase-config.js", "supabase-client.js", "supabase-auth.js", "auth-core.js", "sync-core.js", "supabase-sync.js"]) {
   const check = spawnSync("node", ["--check", file], { encoding: "utf8" });
   pass(`Sintaxe JavaScript válida (${file})`, check.status === 0, check.stderr?.trim());
 }
@@ -149,7 +151,7 @@ const secretPattern =
   /(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|sb_secret_[A-Za-z0-9_-]{10,}|service_role|-----BEGIN [A-Z ]*PRIVATE KEY-----)/;
 pass(
   "Sem chaves ou segredos no código público",
-  ![app, html, css, sw, supabaseConfig, supabaseClient, supabaseAuth, authCore].some(text => secretPattern.test(text))
+  ![app, html, css, sw, supabaseConfig, supabaseClient, supabaseAuth, authCore, syncCore, supabaseSync].some(text => secretPattern.test(text))
 );
 
 // --- Resultado ------------------------------------------------------------

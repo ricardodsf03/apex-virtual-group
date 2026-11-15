@@ -12,7 +12,7 @@ test("arranque limpo cria estado inicial e grava-o", () => {
   assert.equal(state.projects.length, 2);
   assert.equal(state.tasks.length, 6);
   assert.equal(state.activities.length, 1);
-  assert.match(state.activities[0].message, /0\.4\.0/);
+  assert.match(state.activities[0].message, /0\.5\.0/);
   assert.equal(saved(app).tasks.length, 6);
 });
 
@@ -119,8 +119,8 @@ test("cabeçalho mostra o dia da semana atual e a versão", () => {
     .toLocaleDateString("pt-BR", { weekday: "long" })
     .toUpperCase();
   assert.equal(app.element("#todayLabel").textContent, `${weekday} · WORKSPACE`);
-  assert.equal(app.element("#appVersion").textContent, "v0.4.0");
-  assert.equal(app.element("#footerVersion").textContent, "v0.4.0");
+  assert.equal(app.element("#appVersion").textContent, "v0.5.0");
+  assert.equal(app.element("#footerVersion").textContent, "v0.5.0");
 });
 
 test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {

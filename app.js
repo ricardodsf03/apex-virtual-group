@@ -1,4 +1,4 @@
-const APP_VERSION = "0.4.0";
+const APP_VERSION = "0.5.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -74,9 +74,25 @@ function loadState() {
 
 let state = loadState();
 
+// Avisa os módulos de sincronização (não existe nos testes de Node).
+function notify(name) {
+  if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent(name));
+}
+
+window.apexGetState = () => state;
+
+// Troca o estado pelo da nuvem: grava a cópia local sem voltar a sincronizar.
+window.apexReplaceState = next => {
+  state = next;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (error) { console.error("Apex: não foi possível guardar a cópia local.", error); }
+  renderAll();
+};
+
 function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    notify("apex:state-saved");
     return true;
   } catch (error) {
     console.error("Apex: não foi possível salvar os dados.", error);

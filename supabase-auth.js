@@ -59,6 +59,7 @@ function onSession(session) {
   currentUserId = session?.user?.id ?? null;
   if (!session) {
     window.apexOrganizationId = null;
+    window.dispatchEvent(new CustomEvent("apex:signed-out"));
     renderAccount(null);
     return;
   }
