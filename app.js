@@ -3,15 +3,15 @@ const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
 const agents = [
-  {role:"CEO",name:"Diretor Executivo",desc:"Coordena o conselho, prioridades, projetos e distribuição de trabalho.",icon:"♛"},
+  {role:"CEO",name:"Diretor Executivo",desc:"Define a estratégia, administra o conselho e coordena prioridades, projetos e distribuição de trabalho.",icon:"♛"},
   {role:"CFO",name:"Diretor Financeiro",desc:"Avalia custos, receitas, cenários, orçamento e rentabilidade.",icon:"▥"},
   {role:"COO",name:"Diretor de Operações",desc:"Desenha processos, operações, indicadores e planos de execução.",icon:"⚙"},
   {role:"CTO",name:"Diretor de Tecnologia",desc:"Define arquitetura, desenvolvimento, integrações e qualidade técnica.",icon:"⌘"},
   {role:"CLO",name:"Diretor Jurídico",desc:"Identifica requisitos legais, contratos, conformidade e riscos jurídicos.",icon:"§"},
-  {role:"CMO",name:"Diretor de Marketing",desc:"Trabalha posicionamento, marca, comunicação e aquisição de clientes.",icon:"✳"},
-  {role:"CCO",name:"Diretor Comercial",desc:"Desenvolve vendas, parcerias, clientes e canais comerciais.",icon:"↗"},
-  {role:"CSO",name:"Diretor de Estratégia",desc:"Investiga mercados, concorrência, oportunidades e alternativas.",icon:"◎"},
-  {role:"CRO",name:"Diretor de Risco e Auditoria",desc:"Verifica evidências, pressupostos, qualidade, segurança e riscos.",icon:"⬡"}
+  {role:"CMO",name:"Diretor de Marketing",desc:"Trabalha posicionamento, marca, campanhas e aquisição de clientes.",icon:"✳"},
+  {role:"CCO",name:"Diretor de Comunicação e Clientes",desc:"Gere a relação com clientes, o atendimento, o sucesso do cliente e a comunicação institucional.",icon:"✉"},
+  {role:"CSO",name:"Diretor de Segurança",desc:"Protege sistemas, dados e acessos, e acompanha riscos, auditoria e continuidade do negócio.",icon:"⬡"},
+  {role:"CRO",name:"Diretor de Receitas e Crescimento",desc:"Gere vendas, parcerias, canais e o crescimento da receita.",icon:"↗"}
 ];
 
 const initialProjects = [

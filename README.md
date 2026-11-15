@@ -16,7 +16,7 @@ Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para i
 Os dois projetos e as seis tarefas iniciais são exemplos. Os dados ficam apenas neste dispositivo e navegador, sem sincronização.
 
 ## O que ainda NÃO está ligado
-Não existem agentes de IA reais, autenticação, tabelas na base de dados, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
+Não existem agentes de IA reais, autenticação, uso das tabelas do Supabase pela app, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
 
 ## Executar localmente
 ```bash
@@ -34,15 +34,28 @@ O projeto Supabase está ligado apenas ao nível da configuração. Os dados da 
 - `supabase-client.js` carrega `@supabase/supabase-js` de uma versão fixa (`SUPABASE_JS_VERSION`) e expõe `window.apexSupabase` (`client`, `validation`, `testConnection()`). Se a rede falhar, o dashboard continua a funcionar.
 - Antes de criar tabelas: ativar RLS em todas e validar com os avisos de segurança do Supabase. Não correr migrações sem rever o esquema.
 
-## Base de dados (esquema proposto)
+## Base de dados
 `supabase/migrations/20261115190000_core_schema.sql` define organizações, membros, diretores, projetos, tarefas e atividade, com **RLS em todas as tabelas**: cada utilizador só vê os dados das organizações a que pertence, o papel anónimo não tem acesso e a atividade é só de acrescentar.
 
-**Estado: proposta, ainda NÃO aplicada ao projeto Supabase.** O frontend continua a usar `localStorage`.
+**Estado: aplicada ao projeto Supabase (15/11/2026), com 0 avisos de segurança. As tabelas estão vazias e o frontend continua a usar `localStorage`.** Ligar a app (autenticação e depois os dados) é o passo seguinte.
 
 - As políticas usam funções `SECURITY DEFINER` no esquema privado `private` (com `search_path` fixo) para evitar recursão entre políticas.
-- Para testar a base de dados, com um Postgres local (variáveis `PGHOST`, `PGUSER`, `PGPASSWORD`): `./scripts/test-rls.sh`. Cria uma base temporária, aplica as migrações e corre `supabase/tests/rls.test.sql` (dois utilizadores, escritas cruzadas, anónimo, restrições). O CI faz o mesmo num Postgres 16.
-- Os cargos CCO, CSO e CRO guardam só o código; o nome e a descrição são editáveis porque o significado ainda está por decidir.
-- Depois de aplicar uma migração ao Supabase, correr os avisos de segurança (`get_advisors`).
+- Para testar a base de dados com um Postgres local (variáveis `PGHOST`, `PGUSER`, `PGPASSWORD`): `./scripts/test-rls.sh`. Cria uma base temporária, aplica as migrações e corre `supabase/tests/rls.test.sql` (dois utilizadores, escritas cruzadas, anónimo, restrições). O CI faz o mesmo num Postgres 16.
+- Convites de membros não estão incluídos: hoje só o criador da organização pode ser membro. Serão uma migração à parte, com fluxo feito no servidor.
+- Depois de aplicar uma nova migração ao Supabase, correr os avisos de segurança (`get_advisors`).
+
+## Cargos
+| Código | Cargo |
+| --- | --- |
+| CEO | Estratégia e administração |
+| CFO | Finanças |
+| COO | Operações |
+| CTO | Tecnologia |
+| CLO | Jurídico e conformidade |
+| CMO | Marketing (marca, campanhas, aquisição) |
+| CCO | Comunicação e clientes |
+| CSO | Segurança (inclui riscos, auditoria e continuidade) |
+| CRO | Receitas e crescimento |
 
 ## Testes e qualidade
 Requer Node.js 22 ou superior, sem dependências a instalar.

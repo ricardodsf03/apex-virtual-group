@@ -81,3 +81,8 @@ Sem código no repositório. Estado desconhecido.
 
 ## Regras mantidas
 Sem commits diretos no `main` (alterações por pull request), sem reconstruir o projeto, sem migrações SQL antes de validar configuração e segurança, e sem credenciais no código.
+
+## Atualização (15/11/2026)
+- Cargos decididos: CCO = Comunicação e clientes, CSO = Segurança, CRO = Receitas e crescimento (versão do handoff).
+- Esquema com RLS aplicado ao Supabase (6 tabelas, 0 avisos de segurança). A app ainda não o usa.
+- Pendentes: recuperar o trabalho do Codespace, rodar as credenciais da GitHub App, decidir sobre repositório privado e proteção do `main`.
