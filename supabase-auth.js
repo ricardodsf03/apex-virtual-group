@@ -1,7 +1,12 @@
 // Interface de autenticação (módulo ES). Depende de supabase-client.js e
 // de auth-core.js. Se o Supabase não estiver disponível, o dashboard local
 // continua funcionando e o botão de entrada fica desativado.
-import { validateCredentials, friendlyAuthError, ensureOrganization } from "./auth-core.js";
+import {
+  validateCredentials,
+  validateNewPassword,
+  friendlyAuthError,
+  ensureOrganization
+} from "./auth-core.js";
 
 const $ = selector => document.querySelector(selector);
 
@@ -15,6 +20,15 @@ const message = $("#authMessage");
 const signInBtn = $("#authSignIn");
 const signUpBtn = $("#authSignUp");
 
+const forgotBtn = $("#authForgot");
+const resetDialog = $("#resetDialog");
+const resetForm = $("#resetForm");
+const resetPassword = $("#resetPassword");
+const resetMessage = $("#resetMessage");
+const resetSave = $("#resetSave");
+
+const openedFromRecoveryLink = /[#&]type=recovery\b/.test(location.hash);
+
 let started = false;
 let client = null;
 let currentUserId = null;
@@ -25,9 +39,72 @@ function setMessage(text, kind = "info") {
   message.hidden = !text;
 }
 
+function setResetMessage(text, kind = "info") {
+  resetMessage.textContent = text;
+  resetMessage.dataset.kind = kind;
+  resetMessage.hidden = !text;
+}
+
+function openResetDialog() {
+  resetForm.reset();
+  setResetMessage("");
+  if (!resetDialog.open) resetDialog.showModal();
+  resetPassword.focus();
+}
+
+// Envia o link de redefinição. A resposta é sempre a mesma, exista ou não a conta.
+async function sendReset() {
+  const checked = validateCredentials(emailInput.value, "x", "signin");
+  if (!checked.ok) {
+    setMessage("Informe o e-mail da conta para receber o link.", "error");
+    return;
+  }
+  setBusy(true);
+  try {
+    const { error } = await client.auth.resetPasswordForEmail(checked.email, {
+      redirectTo: `${location.origin}${location.pathname}`
+    });
+    if (error) {
+      setMessage(friendlyAuthError(error), "error");
+      return;
+    }
+    setMessage("Se a conta existir, enviamos um link para o seu e-mail.", "info");
+  } catch (error) {
+    console.error("Apex: falha ao pedir a redefinição.", error);
+    setMessage(friendlyAuthError(error), "error");
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function saveNewPassword() {
+  const checked = validateNewPassword(resetPassword.value);
+  if (!checked.ok) {
+    setResetMessage(checked.error, "error");
+    return;
+  }
+  resetSave.disabled = true;
+  try {
+    const { error } = await client.auth.updateUser({ password: resetPassword.value });
+    if (error) {
+      setResetMessage(friendlyAuthError(error), "error");
+      return;
+    }
+    resetPassword.value = "";
+    history.replaceState(null, "", `${location.pathname}${location.search}`);
+    resetDialog.close();
+  } catch (error) {
+    console.error("Apex: falha ao definir a nova senha.", error);
+    setResetMessage(friendlyAuthError(error), "error");
+  } finally {
+    resetSave.disabled = false;
+  }
+}
+
 function setBusy(busy) {
   signInBtn.disabled = busy;
   signUpBtn.disabled = busy;
+  forgotBtn.disabled = busy;
 }
 
 function renderAccount(session, note = "") {
@@ -141,8 +218,20 @@ async function start() {
   signInBtn.addEventListener("click", () => submit("signin"));
   signUpBtn.addEventListener("click", () => submit("signup"));
   $("#authCancel").addEventListener("click", () => dialog.close());
+  forgotBtn.addEventListener("click", sendReset);
+  resetForm.addEventListener("submit", event => {
+    event.preventDefault();
+    saveNewPassword();
+  });
+  $("#resetCancel").addEventListener("click", () => resetDialog.close());
 
-  client.auth.onAuthStateChange((_event, session) => onSession(session));
+  client.auth.onAuthStateChange((event, session) => {
+    onSession(session);
+    if (event === "PASSWORD_RECOVERY") setTimeout(openResetDialog, 0);
+  });
+  // O evento pode ter ocorrido antes de este código escutar; a leitura do
+  // endereço foi feita no arranque do módulo, antes de o cliente limpar o hash.
+  if (openedFromRecoveryLink) setTimeout(openResetDialog, 0);
 }
 
 window.addEventListener("apex:supabase-ready", start);

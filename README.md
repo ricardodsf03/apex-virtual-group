@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.5.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.5.1** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -40,6 +40,7 @@ O projeto Supabase está conectado apenas no nível da configuração. Os dados 
 - O Supabase pode pedir confirmação de e-mail ao criar conta. Nesse caso o app avisa e só deixa entrar depois de confirmar.
 - Depois de criar a conta do fundador, **desativar a criação de contas** no painel do Supabase (Authentication, Sign In / Providers) e ativar MFA. Qualquer pessoa com o URL consegue, por padrão, se registrar (só vê os seus próprios dados, mas é desnecessário).
 - A lógica (`auth-core.js`) não toca no DOM e tem testes com um cliente simulado; o fluxo completo foi testado no browser com um Supabase simulado. O login real depende do projeto Supabase e da rede.
+- **Esqueci a senha:** no diálogo de entrada, digite o e-mail e toque em "Esqueci a senha". O link enviado abre o app e pede a nova senha (mínimo de 12 caracteres). No Supabase, em Authentication › URL Configuration, o endereço do app tem de estar em Site URL e em Redirect URLs.
 
 ## Banco de dados
 `supabase/migrations/20261115190000_core_schema.sql` define organizações, membros, diretores, projetos, tarefas e atividade, com **RLS em todas as tabelas**: cada usuário só vê os dados das organizações a que pertence, o papel anônimo não tem acesso e a atividade é só de acrescentar.
@@ -51,7 +52,7 @@ O projeto Supabase está conectado apenas no nível da configuração. Os dados 
 - Convites de membros não estão incluídos: hoje só o criador da organização pode ser membro. Serão uma migração à parte, com fluxo feito no servidor.
 - Depois de aplicar uma nova migração ao Supabase, correr os avisos de segurança (`get_advisors`).
 
-## Sincronização (v0.5.0)
+## Sincronização (desde a v0.5.0)
 Com a sessão iniciada, projetos, tarefas e atividade são copiados para o Supabase (organização do usuário, protegida por RLS).
 - **Primeira entrada:** se a organização está vazia, os dados locais são enviados.
 - **Entradas seguintes:** o estado da nuvem substitui a cópia local (alterações locais feitas sem sessão e ainda não enviadas são perdidas).
