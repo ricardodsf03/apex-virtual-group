@@ -32,9 +32,11 @@ jobs:
           node --check service-worker.js
           node --check supabase-config.js
           node --check supabase-client.js
+          node --check supabase-auth.js
+          node --check auth-core.js
 
       - name: Run unit tests
-        run: node --test tests/app.test.mjs tests/supabase.test.mjs
+        run: node --test tests/*.test.mjs
 
       - name: Run Apex Quality Gate
         run: node scripts/quality-gate.mjs

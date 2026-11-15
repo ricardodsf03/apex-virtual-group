@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.3.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.4.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -9,6 +9,7 @@ Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para i
 - **Projetos:** criação com validação de nome vazio e duplicado.
 - **Tarefas:** criar, atribuir a um diretor, mudar o estado (Por iniciar, Em curso, Concluída), eliminar com confirmação e filtrar por estado.
 - **Atividade recente:** histórico local das últimas 100 ações.
+- **Conta (Supabase Auth):** botão Entrar/Sair no topo, com e-mail e palavra-passe. Ao entrar pela primeira vez cria a organização "Apex Virtual Group", o membro `owner` e os 9 diretores (idempotente). **Os projetos e tarefas continuam no `localStorage`; ainda não são sincronizados com o Supabase.**
 - **Supabase (ligação base):** `supabase-config.js` (URL e chave pública validadas) e `supabase-client.js` (cliente oficial numa versão fixa). O estado aparece no rodapé da barra lateral. **Ainda não há tabelas, autenticação nem leitura/escrita de dados.**
 - **PWA:** manifesto com ícones e service worker que funciona offline (incluindo as fontes depois da primeira visita).
 - **Controlo de qualidade:** testes automáticos e um quality gate executados no GitHub Actions em cada push e pull request.
@@ -16,7 +17,7 @@ Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para i
 Os dois projetos e as seis tarefas iniciais são exemplos. Os dados ficam apenas neste dispositivo e navegador, sem sincronização.
 
 ## O que ainda NÃO está ligado
-Não existem agentes de IA reais, autenticação, uso das tabelas do Supabase pela app, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
+Não existem agentes de IA reais, uso das tabelas de projetos e tarefas do Supabase pela app, sincronização entre dispositivos, execução em segundo plano nem integração com APIs. A estatística "Decisões pendentes" está sempre a zero porque ainda não há módulo de decisões. Não introduza chaves secretas no frontend.
 
 ## Executar localmente
 ```bash
@@ -34,10 +35,16 @@ O projeto Supabase está ligado apenas ao nível da configuração. Os dados da 
 - `supabase-client.js` carrega `@supabase/supabase-js` de uma versão fixa (`SUPABASE_JS_VERSION`) e expõe `window.apexSupabase` (`client`, `validation`, `testConnection()`). Se a rede falhar, o dashboard continua a funcionar.
 - Antes de criar tabelas: ativar RLS em todas e validar com os avisos de segurança do Supabase. Não correr migrações sem rever o esquema.
 
+## Autenticação
+- Entrada por **e-mail e palavra-passe** (Supabase Auth). Ao criar conta exige-se uma palavra-passe com 12 ou mais caracteres. A sessão fica guardada pelo cliente Supabase no navegador.
+- O Supabase pode pedir confirmação de e-mail ao criar conta. Nesse caso a app avisa e só deixa entrar depois de confirmar.
+- Depois de criar a conta do fundador, **desativar a criação de contas** no painel do Supabase (Authentication, Sign In / Providers) e ativar MFA. Qualquer pessoa com o URL consegue, por defeito, registar-se (só vê os seus próprios dados, mas é desnecessário).
+- A lógica (`auth-core.js`) não toca no DOM e tem testes com um cliente simulado; o fluxo completo foi testado no browser com um Supabase simulado. O login real depende do projeto Supabase e da rede.
+
 ## Base de dados
 `supabase/migrations/20261115190000_core_schema.sql` define organizações, membros, diretores, projetos, tarefas e atividade, com **RLS em todas as tabelas**: cada utilizador só vê os dados das organizações a que pertence, o papel anónimo não tem acesso e a atividade é só de acrescentar.
 
-**Estado: aplicada ao projeto Supabase (15/11/2026), com 0 avisos de segurança. As tabelas estão vazias e o frontend continua a usar `localStorage`.** Ligar a app (autenticação e depois os dados) é o passo seguinte.
+**Estado: aplicada ao projeto Supabase (15/11/2026), com 0 avisos de segurança. As tabelas estão vazias e o frontend continua a usar `localStorage`.** A app já faz login e cria a organização e os diretores; falta ligar os projetos, tarefas e atividade.
 
 - As políticas usam funções `SECURITY DEFINER` no esquema privado `private` (com `search_path` fixo) para evitar recursão entre políticas.
 - Para testar a base de dados com um Postgres local (variáveis `PGHOST`, `PGUSER`, `PGPASSWORD`): `./scripts/test-rls.sh`. Cria uma base temporária, aplica as migrações e corre `supabase/tests/rls.test.sql` (dois utilizadores, escritas cruzadas, anónimo, restrições). O CI faz o mesmo num Postgres 16.
@@ -61,7 +68,7 @@ O projeto Supabase está ligado apenas ao nível da configuração. Os dados da 
 Requer Node.js 22 ou superior, sem dependências a instalar.
 
 ```bash
-node --test tests/app.test.mjs tests/supabase.test.mjs   # comportamento da app e configuração Supabase
+node --test tests/*.test.mjs        # app, configuração Supabase e autenticação (cliente simulado)
 node scripts/quality-gate.mjs    # estrutura, versões coerentes, PWA e segredos
 ```
 
@@ -71,6 +78,7 @@ Ao mudar a versão, atualize `APP_VERSION` em `app.js`, `VERSION` em `service-wo
 ```
 index.html, styles.css, app.js   interface e lógica
 supabase-config.js, supabase-client.js   ligação ao Supabase
+supabase-auth.js, auth-core.js           login (interface) e lógica testável (organização, diretores)
 supabase/migrations, supabase/tests      esquema SQL com RLS e testes
 manifest.json, service-worker.js, icons/   PWA
 tests/                           testes (DOM simulado, sem dependências)

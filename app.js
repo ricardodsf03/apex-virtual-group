@@ -1,4 +1,4 @@
-const APP_VERSION = "0.3.0";
+const APP_VERSION = "0.4.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -13,6 +13,7 @@ const agents = [
   {role:"CSO",name:"Diretor de Segurança",desc:"Protege sistemas, dados e acessos, e acompanha riscos, auditoria e continuidade do negócio.",icon:"⬡"},
   {role:"CRO",name:"Diretor de Receitas e Crescimento",desc:"Gere vendas, parcerias, canais e o crescimento da receita.",icon:"↗"}
 ];
+window.APEX_AGENTS = agents;
 
 const initialProjects = [
   {name:"Apex Virtual Group",desc:"Construção da plataforma empresarial de agentes de IA.",status:"Em estruturação",owner:"CEO"},
