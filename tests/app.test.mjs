@@ -12,7 +12,7 @@ test("arranque limpo cria estado inicial e grava-o", () => {
   assert.equal(state.projects.length, 2);
   assert.equal(state.tasks.length, 6);
   assert.equal(state.activities.length, 1);
-  assert.match(state.activities[0].message, /0\.3\.0/);
+  assert.match(state.activities[0].message, /0\.4\.0/);
   assert.equal(saved(app).tasks.length, 6);
 });
 
@@ -23,19 +23,19 @@ test("dados corrompidos ou de versão errada recuperam o estado inicial", () => 
   }
 });
 
-test("estado válido guardado é carregado como está", () => {
+test("estado válido salvo é carregado como está", () => {
   const custom = { version: 2, projects: [], tasks: [], activities: [] };
   const app = createApp({ storage: { [KEY]: JSON.stringify(custom) } });
   assert.equal(app.run("state.tasks.length"), 0);
 });
 
-test("falha ao gravar avisa o utilizador e devolve false", () => {
+test("falha ao gravar avisa o usuário e retorna false", () => {
   const app = createApp({ failSave: true });
   assert.equal(app.run("saveState()"), false);
-  assert.ok(app.alerts.some(message => /guardar/i.test(message)));
+  assert.ok(app.alerts.some(message => /salvar/i.test(message)));
 });
 
-test("registo de atividades guarda no máximo 100 entradas", () => {
+test("registro de atividades salva no máximo 100 entradas", () => {
   const app = createApp();
   app.run("for (let i = 0; i < 150; i++) logActivity('Teste', 'x' + i)");
   assert.equal(app.run("state.activities.length"), 100);
@@ -70,7 +70,7 @@ test("tarefa sem descrição é rejeitada", () => {
   assert.equal(app.alerts.length, 1);
 });
 
-test("mudar estado e eliminar tarefa", () => {
+test("mudar estado e excluir tarefa", () => {
   const app = createApp();
   const id = app.run("state.tasks[0].id");
 
@@ -116,11 +116,11 @@ test("criar projeto valida nome vazio e duplicados", () => {
 test("cabeçalho mostra o dia da semana atual e a versão", () => {
   const app = createApp();
   const weekday = new Date()
-    .toLocaleDateString("pt-PT", { weekday: "long" })
+    .toLocaleDateString("pt-BR", { weekday: "long" })
     .toUpperCase();
   assert.equal(app.element("#todayLabel").textContent, `${weekday} · WORKSPACE`);
-  assert.equal(app.element("#appVersion").textContent, "v0.3.0");
-  assert.equal(app.element("#footerVersion").textContent, "v0.3.0");
+  assert.equal(app.element("#appVersion").textContent, "v0.4.0");
+  assert.equal(app.element("#footerVersion").textContent, "v0.4.0");
 });
 
 test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {
@@ -131,7 +131,7 @@ test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {
   assert.equal(count("#allAgents"), 9);
 });
 
-test("alterações noutro separador recarregam o estado", () => {
+test("alterações em outra aba recarregam o estado", () => {
   const app = createApp();
   const other = { version: 2, projects: [], tasks: [], activities: [] };
   app.store.set(KEY, JSON.stringify(other));

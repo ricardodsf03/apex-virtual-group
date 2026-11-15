@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const APP_SOURCE = fs.readFileSync(path.join(root, "app.js"), "utf8");
 
-// Corre o app.js num contexto isolado com um DOM mínimo (sem dependências).
+// Executa o app.js num contexto isolado com um DOM mínimo (sem dependências).
 export function createApp({ storage = {}, failSave = false } = {}) {
   const store = new Map(Object.entries(storage));
   const alerts = [];
@@ -65,9 +65,9 @@ export function createApp({ storage = {}, failSave = false } = {}) {
     alerts,
     element,
     windowListeners,
-    // Avalia uma expressão dentro do contexto da app (acede a const/let).
+    // Avalia uma expressão dentro do contexto do app (acessa const/let).
     run: code => vm.runInContext(code, context),
-    // Dispara um listener registado num elemento.
+    // Dispara um listener registrado num elemento.
     fire(selector, type = "click", event = {}) {
       const handlers = element(selector).listeners[type] || [];
       for (const handler of handlers) {

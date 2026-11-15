@@ -52,7 +52,7 @@ test("valida e rejeita configurações incorretas", () => {
   }
 });
 
-test("ficheiros Supabase não têm comandos de terminal nem segredos", () => {
+test("arquivos Supabase não têm comandos de terminal nem segredos", () => {
   const forbidden = [
     /read\s+-r\s+-p/,
     /\bservice_role\b/i,
@@ -79,7 +79,7 @@ test("index.html liga a configuração antes do módulo do cliente", () => {
   assert.ok(html.includes('id="supabaseStatus"'));
 });
 
-test("service worker guarda os ficheiros Supabase em cache", () => {
+test("service worker salva os arquivos Supabase em cache", () => {
   const sw = read("service-worker.js");
   assert.ok(sw.includes('"./supabase-config.js"'));
   assert.ok(sw.includes('"./supabase-client.js"'));
@@ -91,7 +91,7 @@ test("o cliente carrega uma versão fixa da biblioteca", () => {
   assert.ok(!/supabase-js@(latest|\^|~|\d+\/)/.test(client));
 });
 
-test("os cargos da app coincidem com os códigos aceites pela base de dados", () => {
+test("os cargos do app coincidem com os códigos aceitos pelo banco de dados", () => {
   const appCodes = [...read("app.js").matchAll(/role:"([A-Z]{3})"/g)].map(m => m[1]).sort();
   const sql = read("supabase/migrations/20261115190000_core_schema.sql");
   const block = sql.match(/role_code\s+text not null check \(role_code in\s*\(([^)]*)\)/)[1];

@@ -3,7 +3,7 @@
 Primeira missão do handoff: auditar o estado real antes de implementar. Esta auditoria cobre o repositório no GitHub (branches, PRs, CI e histórico completo) e o projeto Supabase (só em leitura). **Não cobre** o Codespace nem os Secrets, que não são acessíveis a partir do GitHub.
 
 ## Resumo
-O `main` contém uma app estática (HTML, CSS e JS sem build) com PWA e persistência em `localStorage`. **O Supabase, a Bridge e a visualização 3D descritos no handoff não existem no repositório.** Se existem, estão apenas no Codespace, sem commit.
+O `main` contém um app estático (HTML, CSS e JS sem build) com PWA e persistência em `localStorage`. **O Supabase, a Bridge e a visualização 3D descritos no handoff não existem no repositório.** Se existem, estão apenas no Codespace, sem commit.
 
 ## A. Arquitetura atual
 - Frontend estático: `index.html`, `styles.css`, `app.js`.
@@ -15,8 +15,8 @@ O `main` contém uma app estática (HTML, CSS e JS sem build) com PWA e persist�
 ## B. Componentes funcionais (testados)
 - Dashboard com 5 vistas (Visão geral, Conselho, Projetos, Tarefas, Documentos).
 - Criação de projetos (validação de vazio e duplicados).
-- Tarefas: criar, mudar estado, eliminar e filtrar.
-- Registo local de atividade (últimas 100 ações).
+- Tarefas: criar, mudar estado, excluir e filtrar.
+- Registro local de atividade (últimas 100 ações).
 - PWA offline e ícones.
 - Testes automáticos e quality gate.
 
@@ -31,7 +31,7 @@ O `main` contém uma app estática (HTML, CSS e JS sem build) com PWA e persist�
 | Backend, autenticação, memória dos agentes | Inexistentes |
 
 ## D. Erros e bloqueios
-- O erro `read -r -p` do `supabase-config.js` **não é verificável**: o ficheiro não está no repositório.
+- O erro `read -r -p` do `supabase-config.js` **não é verificável**: o arquivo não está no repositório.
 - **Inconsistência de cargos** entre o handoff e o código:
 
 | Cargo | Handoff | Código atual |
@@ -45,28 +45,28 @@ O `main` contém uma app estática (HTML, CSS e JS sem build) com PWA e persist�
 ## E. Supabase
 - Existe um projeto `apex-virtual-group` (região eu-west-1), ativo e saudável.
 - Está vazio: **0 tabelas, 0 migrações e 0 avisos de segurança**.
-- Nada está ligado ao frontend.
+- Nada está conectado ao frontend.
 
 ## F. Bridge
 Sem código no repositório. Estado desconhecido.
 
 ## G. Segurança
-- Histórico limpo: nenhum ficheiro `.pem`, `.env` ou padrão de chave em qualquer commit.
+- Histórico limpo: nenhum arquivo `.pem`, `.env` ou padrão de chave em qualquer commit.
 - O repositório é **público**, embora o README recomende privado.
 - O `main` **não tem proteção de branch** (PR e quality gate obrigatórios).
 - A rotação de credenciais da GitHub App está **pendente** e é responsabilidade do fundador. Não é verificável a partir do repositório.
 
 ## H. Prioridades
 1. Recuperar o trabalho do Codespace (`git status`, `git branch -a`, push para um branch).
-2. Rodar as credenciais da GitHub App (revogar a antiga e guardar a nova só nos Secrets).
+2. Rodar as credenciais da GitHub App (revogar a antiga e salvar a nova só nos Secrets).
 3. Decidir se o repositório passa a privado.
 4. Ativar proteção do `main`.
 5. Criar `supabase-config.js` e `supabase-client.js` corretos.
 6. Desenhar o esquema com RLS e só depois migrar.
 7. Bridge e, por fim, os agentes.
 
-## I. Ficheiros a criar ou alterar
-- `supabase-config.js`, `supabase-client.js` e a ligação no `index.html`.
+## I. Arquivos a criar ou alterar
+- `supabase-config.js`, `supabase-client.js` e a conexão no `index.html`.
 - `supabase/migrations/*.sql` (esquema e políticas RLS).
 - `bridge/` (Express, Octokit) com `package.json`.
 - Alinhar `app.js` e o README com os cargos definitivos.
@@ -75,8 +75,8 @@ Sem código no repositório. Estado desconhecido.
 | Etapa | Verificação |
 | --- | --- |
 | Config Supabase | `url_configurada`, `chave_configurada` e `modulo_no_html` a `true` |
-| Dashboard | Os 14 testes atuais continuam a passar |
-| Esquema | Utilizador A não lê dados do utilizador B (RLS) |
+| Dashboard | Os 14 testes atuais continuam passando |
+| Esquema | Usuário A não lê dados do usuário B (RLS) |
 | Bridge | Operação num branch `apex/*` e Draft PR, sem escrever no `main` |
 
 ## Regras mantidas
@@ -84,5 +84,5 @@ Sem commits diretos no `main` (alterações por pull request), sem reconstruir o
 
 ## Atualização (15/11/2026)
 - Cargos decididos: CCO = Comunicação e clientes, CSO = Segurança, CRO = Receitas e crescimento (versão do handoff).
-- Esquema com RLS aplicado ao Supabase (6 tabelas, 0 avisos de segurança). A app ainda não o usa.
+- Esquema com RLS aplicado ao Supabase (6 tabelas, 0 avisos de segurança). O app ainda não o usa.
 - Pendentes: recuperar o trabalho do Codespace, rodar as credenciais da GitHub App, decidir sobre repositório privado e proteção do `main`.

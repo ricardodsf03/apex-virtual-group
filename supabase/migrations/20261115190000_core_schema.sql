@@ -3,9 +3,9 @@
 -- ESTADO: aplicada ao projeto Supabase em 15/11/2026 (migração "core_schema").
 -- Após aplicar: 6 tabelas com RLS e 0 avisos de segurança (get_advisors).
 --
--- Modelo: um utilizador (auth.users) pertence a uma ou mais organizações.
+-- Modelo: um usuário (auth.users) pertence a uma ou mais organizações.
 -- Todos os dados de negócio pertencem a uma organização e só são visíveis
--- aos seus membros. Não há dados públicos nem acesso anónimo.
+-- aos seus membros. Não há dados públicos nem acesso anônimo.
 --
 -- Fora de âmbito (fases seguintes): convites de membros, aprovações humanas,
 -- memória dos agentes, auditoria detalhada.
@@ -114,7 +114,7 @@ create trigger tasks_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- Atividade: registo só de acrescentar (sem update nem delete).
+-- Atividade: registro só de acrescentar (sem update nem delete).
 -- ---------------------------------------------------------------------------
 create table public.activities (
   id              uuid primary key default gen_random_uuid(),
@@ -133,7 +133,7 @@ create index activities_org_created_idx
 -- Funções auxiliares das políticas. Vivem num esquema privado (não exposto
 -- pela API) e são SECURITY DEFINER para consultar organization_members sem
 -- passar pela RLS dessa tabela, o que evita recursão infinita entre políticas.
--- Só devolvem verdadeiro/falso sobre o utilizador autenticado.
+-- Só devolvem verdadeiro/falso sobre o usuário autenticado.
 -- ---------------------------------------------------------------------------
 create schema if not exists private;
 revoke all on schema private from public;
@@ -196,12 +196,12 @@ alter table public.projects             enable row level security;
 alter table public.tasks                enable row level security;
 alter table public.activities           enable row level security;
 
--- organization_members: cada utilizador vê apenas as suas próprias linhas.
+-- organization_members: cada usuário vê apenas as suas próprias linhas.
 create policy members_select_own on public.organization_members
   for select to authenticated
   using (user_id = (select auth.uid()));
 
--- Arranque: quem criou a organização pode inserir-se como 'owner'.
+-- Arranque: quem criou a organização pode se inserir como 'owner'.
 create policy members_insert_bootstrap on public.organization_members
   for insert to authenticated
   with check (
@@ -253,7 +253,7 @@ create policy activities_insert_member on public.activities
   );
 
 -- ---------------------------------------------------------------------------
--- Privilégios: o papel anónimo não tem acesso a nada.
+-- Privilégios: o papel anônimo não tem acesso a nada.
 -- ---------------------------------------------------------------------------
 revoke all on public.organizations        from anon;
 revoke all on public.organization_members from anon;

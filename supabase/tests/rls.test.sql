@@ -1,5 +1,5 @@
--- Testes de isolamento RLS com dois utilizadores (A e B).
--- Corre com scripts/test-rls.sh numa base de dados descartável.
+-- Testes de isolamento RLS com dois usuários (A e B).
+-- Rode com scripts/test-rls.sh num banco de dados descartável.
 \set ON_ERROR_STOP on
 \set A '11111111-1111-1111-1111-111111111111'
 \set B '22222222-2222-2222-2222-222222222222'
@@ -18,7 +18,7 @@ begin
 end $$;
 grant execute on all functions in schema pg_temp to public;
 
--- Utilizador A cria organização e dados
+-- Usuário A cria organização e dados
 set role authenticated; select set_config('request.jwt.claim.sub', :'A', false);
 insert into public.organizations (id, name) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Org A');
 insert into public.organization_members values ('aaaaaaaa-0000-0000-0000-000000000001', :'A', 'owner');
@@ -34,7 +34,7 @@ select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, o
 select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','x','CXO')$$, 'cargo inválido');
 select pg_temp.expect_fail($$insert into public.projects (organization_id, name) values ('aaaaaaaa-0000-0000-0000-000000000001','projeto a')$$, 'projeto duplicado (sem distinguir maiúsculas)');
 select pg_temp.expect_fail($$insert into public.directors (organization_id, role_code, name) values ('aaaaaaaa-0000-0000-0000-000000000001','CEO','Outro')$$, 'cargo duplicado na organização');
-select pg_temp.expect_fail($$insert into public.activities (organization_id, actor, message, created_by) values ('aaaaaaaa-0000-0000-0000-000000000001','X','y','22222222-2222-2222-2222-222222222222')$$, 'atividade em nome de outro utilizador');
+select pg_temp.expect_fail($$insert into public.activities (organization_id, actor, message, created_by) values ('aaaaaaaa-0000-0000-0000-000000000001','X','y','22222222-2222-2222-2222-222222222222')$$, 'atividade em nome de outro usuário');
 
 -- Atividade só de acrescentar
 update public.activities set message = 'alterada';
@@ -42,7 +42,7 @@ select pg_temp.expect_eq((select count(*) from public.activities where message =
 delete from public.activities;
 select pg_temp.expect_eq((select count(*) from public.activities), 1, 'atividade não pode ser apagada');
 
--- Utilizador B não vê nem altera nada de A
+-- Usuário B não vê nem altera nada de A
 select set_config('request.jwt.claim.sub', :'B', false);
 select pg_temp.expect_eq((select count(*) from public.organizations), 0, 'B não vê organizações de A');
 select pg_temp.expect_eq((select count(*) from public.organization_members), 0, 'B não vê membros de A');
@@ -69,10 +69,10 @@ select pg_temp.expect_eq((select count(*) from public.tasks where title = 'Taref
 select pg_temp.expect_eq((select count(*) from public.projects), 1, 'projeto de A intacto');
 select pg_temp.expect_eq((select count(*) from public.tasks where title = 'Tarefa B'), 0, 'A não vê a tarefa de B');
 
--- Anónimo e sem sessão
+-- Anônimo e sem sessão
 reset role; set role anon; select set_config('request.jwt.claim.sub', '', false);
-select pg_temp.expect_fail($$select * from public.tasks$$, 'anónimo não lê tarefas');
-select pg_temp.expect_fail($$select * from public.organizations$$, 'anónimo não lê organizações');
-select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','x','CTO')$$, 'anónimo não escreve');
+select pg_temp.expect_fail($$select * from public.tasks$$, 'anônimo não lê tarefas');
+select pg_temp.expect_fail($$select * from public.organizations$$, 'anônimo não lê organizações');
+select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','x','CTO')$$, 'anônimo não escreve');
 reset role;
 \echo === TODOS OS TESTES RLS PASSARAM ===

@@ -1,5 +1,5 @@
-// Mantém esta versão igual a APP_VERSION em app.js (o quality gate verifica).
-const VERSION = "0.3.0";
+// Mantenha esta versão igual a APP_VERSION em app.js (o quality gate verifica).
+const VERSION = "0.4.0";
 const CACHE = `apex-v${VERSION}`;
 const FONT_CACHE = "apex-fonts";
 
@@ -10,6 +10,8 @@ const ASSETS = [
   "./app.js",
   "./supabase-config.js",
   "./supabase-client.js",
+  "./supabase-auth.js",
+  "./auth-core.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.png",
@@ -60,7 +62,7 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(request.url);
 
-  // Fontes: guardadas em cache para a app funcionar offline.
+  // Fontes: salvas em cache para o app funcionar offline.
   if (FONT_HOSTS.includes(url.hostname)) {
     event.respondWith(staleWhileRevalidate(request, FONT_CACHE));
     return;
