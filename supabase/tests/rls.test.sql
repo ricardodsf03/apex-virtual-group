@@ -42,12 +42,41 @@ select pg_temp.expect_eq((select count(*) from public.activities where message =
 delete from public.activities;
 select pg_temp.expect_eq((select count(*) from public.activities), 1, 'atividade não pode ser apagada');
 
+-- Decisões: A (owner) propõe e aprova; regras de governança
+select pg_temp.expect_eq((select count(*) from public.decisions), 0, 'A começa sem decisões');
+insert into public.decisions (organization_id, title, proposed_by_role) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Decisão A', 'CFO');
+select pg_temp.expect_eq((select count(*) from public.decisions where status = 'Pendente' and decided_by is null), 1, 'decisão nasce pendente');
+update public.decisions set status = 'Aprovada', decision_note = 'ok' where title = 'Decisão A';
+select pg_temp.expect_eq((select count(*) from public.decisions where status = 'Aprovada' and decided_by = :'A'::uuid and decided_at is not null), 1, 'servidor preenche quem decidiu e quando');
+select pg_temp.expect_fail($$update public.decisions set title = 'Mudada' where title = 'Decisão A'$$, 'decisão tomada não pode ser alterada');
+select pg_temp.expect_fail($$update public.decisions set status = 'Rejeitada' where title = 'Decisão A'$$, 'decisão tomada não pode ser revertida');
+select pg_temp.expect_fail($$delete from public.decisions where title = 'Decisão A'$$, 'decisão tomada não pode ser apagada');
+update public.decisions set title = title where title = 'Decisão A';
+select pg_temp.expect_fail($$insert into public.decisions (organization_id, title, status) values ('aaaaaaaa-0000-0000-0000-000000000001', 'x', 'Qualquer')$$, 'estado de decisão inválido');
+insert into public.decisions (organization_id, title) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Pendente A');
+delete from public.decisions where title = 'Pendente A';
+select pg_temp.expect_eq((select count(*) from public.decisions), 1, 'decisão pendente pode ser apagada');
+
+-- Membro que não é dono: propõe, mas não decide
+reset role;
+insert into auth.users values ('33333333-3333-3333-3333-333333333333');
+insert into public.organization_members values ('aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'member');
+set role authenticated; select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);
+insert into public.decisions (organization_id, title, proposed_by_role) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Proposta do membro', 'CTO');
+select pg_temp.expect_fail($$update public.decisions set status = 'Aprovada' where title = 'Proposta do membro'$$, 'membro que não é dono não aprova');
+select pg_temp.expect_fail($$insert into public.decisions (organization_id, title, status) values ('aaaaaaaa-0000-0000-0000-000000000001', 'Já aprovada', 'Aprovada')$$, 'membro não cria decisão já aprovada');
+reset role; set role authenticated; select set_config('request.jwt.claim.sub', :'A', false);
+select pg_temp.expect_eq((select count(*) from public.decisions where title = 'Proposta do membro' and status = 'Pendente'), 1, 'proposta do membro continua pendente');
+delete from public.decisions where title = 'Proposta do membro';
+
 -- Usuário B não vê nem altera nada de A
 select set_config('request.jwt.claim.sub', :'B', false);
 select pg_temp.expect_eq((select count(*) from public.organizations), 0, 'B não vê organizações de A');
 select pg_temp.expect_eq((select count(*) from public.organization_members), 0, 'B não vê membros de A');
 select pg_temp.expect_eq((select count(*) from public.projects), 0, 'B não vê projetos de A');
 select pg_temp.expect_eq((select count(*) from public.tasks), 0, 'B não vê tarefas de A');
+select pg_temp.expect_eq((select count(*) from public.decisions), 0, 'B não vê decisões de A');
+select pg_temp.expect_fail($$insert into public.decisions (organization_id, title) values ('aaaaaaaa-0000-0000-0000-000000000001','Intrusa')$$, 'B não escreve decisões na organização de A');
 select pg_temp.expect_eq((select count(*) from public.directors), 0, 'B não vê diretores de A');
 select pg_temp.expect_eq((select count(*) from public.activities), 0, 'B não vê atividade de A');
 select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','Intrusa','CTO')$$, 'B não escreve tarefas na organização de A');
@@ -72,6 +101,7 @@ select pg_temp.expect_eq((select count(*) from public.tasks where title = 'Taref
 -- Anônimo e sem sessão
 reset role; set role anon; select set_config('request.jwt.claim.sub', '', false);
 select pg_temp.expect_fail($$select * from public.tasks$$, 'anônimo não lê tarefas');
+select pg_temp.expect_fail($$select * from public.decisions$$, 'anônimo não lê decisões');
 select pg_temp.expect_fail($$select * from public.organizations$$, 'anônimo não lê organizações');
 select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','x','CTO')$$, 'anônimo não escreve');
 reset role;

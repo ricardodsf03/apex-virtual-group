@@ -12,7 +12,7 @@ test("arranque limpo cria estado inicial e grava-o", () => {
   assert.equal(state.projects.length, 2);
   assert.equal(state.tasks.length, 6);
   assert.equal(state.activities.length, 1);
-  assert.match(state.activities[0].message, /0\.5\.1/);
+  assert.match(state.activities[0].message, /0\.6\.0/);
   assert.equal(saved(app).tasks.length, 6);
 });
 
@@ -119,8 +119,8 @@ test("cabeçalho mostra o dia da semana atual e a versão", () => {
     .toLocaleDateString("pt-BR", { weekday: "long" })
     .toUpperCase();
   assert.equal(app.element("#todayLabel").textContent, `${weekday} · WORKSPACE`);
-  assert.equal(app.element("#appVersion").textContent, "v0.5.1");
-  assert.equal(app.element("#footerVersion").textContent, "v0.5.1");
+  assert.equal(app.element("#appVersion").textContent, "v0.6.0");
+  assert.equal(app.element("#footerVersion").textContent, "v0.6.0");
 });
 
 test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {
@@ -139,4 +139,50 @@ test("alterações em outra aba recarregam o estado", () => {
     handler({ key: KEY });
   }
   assert.equal(app.run("state.tasks.length"), 0);
+});
+
+test("estado antigo sem decisões é carregado com lista vazia", () => {
+  const old = { version: 2, projects: [], tasks: [], activities: [] };
+  const app = createApp({ storage: { [KEY]: JSON.stringify(old) } });
+  assert.equal(app.run("state.decisions.length"), 0);
+});
+
+test("propor, aprovar e rejeitar decisões; decisão tomada é definitiva", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "<b>Comprar</b> plano";
+  app.element("#decisionRationale").value = "Preciso";
+  app.element("#decisionProposer").value = "CFO";
+  app.fire("#saveDecisionBtn");
+
+  assert.equal(app.run("state.decisions.length"), 1);
+  assert.equal(app.run("state.decisions[0].status"), "Pendente");
+  assert.equal(app.run("state.decisions[0].proposer"), "CFO");
+  assert.ok(app.element("#decisionList").innerHTML.includes("&lt;b&gt;Comprar&lt;/b&gt;"));
+  assert.equal(saved(app).decisions.length, 1);
+
+  const id = app.run("state.decisions[0].id");
+  app.fire("#decisionList", "click", { target: { dataset: { decisionApprove: id } } });
+  assert.equal(app.run("state.decisions[0].status"), "Aprovada");
+  assert.ok(app.run("state.decisions[0].decidedAt"));
+
+  // já decidida: rejeitar depois não muda nada
+  app.fire("#decisionList", "click", { target: { dataset: { decisionReject: id } } });
+  assert.equal(app.run("state.decisions[0].status"), "Aprovada");
+});
+
+test("decisão sem título é rejeitada", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "  ";
+  app.fire("#saveDecisionBtn");
+  assert.equal(app.run("state.decisions.length"), 0);
+  assert.equal(app.alerts.length, 1);
+});
+
+test("rejeitar uma decisão pendente", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "Algo";
+  app.fire("#saveDecisionBtn");
+  const id = app.run("state.decisions[0].id");
+  app.fire("#decisionList", "click", { target: { dataset: { decisionReject: id } } });
+  assert.equal(app.run("state.decisions[0].status"), "Rejeitada");
 });
