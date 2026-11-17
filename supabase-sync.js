@@ -38,6 +38,13 @@ async function flush() {
   }
 }
 
+// Envia já (usado antes de chamar a Bridge). Espera um envio em curso terminar.
+window.apexSyncNow = async () => {
+  clearTimeout(timer);
+  while (running) await new Promise(resolve => setTimeout(resolve, 100));
+  await flush();
+};
+
 function schedule() {
   clearTimeout(timer);
   timer = setTimeout(flush, DEBOUNCE_MS);

@@ -1,4 +1,4 @@
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.7.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -83,6 +83,13 @@ function notify(name) {
 }
 
 window.apexGetState = () => state;
+
+// Registra uma atividade vinda de um módulo (ex.: Bridge), grava e redesenha.
+window.apexRecord = (actor, message, type = "action") => {
+  logActivity(actor, message, type);
+  saveState();
+  renderAll();
+};
 
 // Troca o estado pelo da nuvem: grava a cópia local sem voltar a sincronizar.
 window.apexReplaceState = next => {
@@ -194,6 +201,23 @@ function renderTasks() {
     </div>`).join("") || "<p class='muted'>Não existem tarefas nesta categoria.</p>";
 }
 
+// Estado da Bridge para uma decisão aprovada (só com sessão iniciada).
+function bridgeArea(item) {
+  if (item.status !== "Aprovada" || !window.apexOrganizationId) return "";
+  const run = (window.apexBridgeRuns || {})[item.id];
+  const id = escapeHtml(item.id);
+  if (run?.status === "opened" && run.pr_url) {
+    return `<small>Repositório: <a href="${escapeHtml(run.pr_url)}" target="_blank" rel="noopener noreferrer">Draft PR #${escapeHtml(run.pr_number)}</a></small>`;
+  }
+  if (run?.status === "running") return "<small>Repositório: enviando para a Bridge…</small>";
+  const failed = run?.status === "failed"
+    ? `<small class="bridge-error">Bridge: ${escapeHtml(run.error || "falhou")}</small>` : "";
+  return `${failed}
+        <div class="decision-actions">
+          <button class="approve" data-decision-bridge="${id}">${run ? "Tentar de novo" : "Registrar no repositório"}</button>
+        </div>`;
+}
+
 function renderDecisions() {
   const filter = window.apexDecisionFilter || "Pendente";
   const items = state.decisions.filter(item =>
@@ -210,6 +234,7 @@ function renderDecisions() {
         item.status !== "Pendente" && item.decidedAt
           ? ` · ${escapeHtml(item.status)} em ${formatDate(item.decidedAt)}` : ""}</small>
       ${item.note ? `<small>Nota: ${escapeHtml(item.note)}</small>` : ""}
+      ${bridgeArea(item)}
       ${item.status === "Pendente" ? `
         <div class="decision-actions">
           <button class="approve" data-decision-approve="${escapeHtml(item.id)}">Aprovar</button>

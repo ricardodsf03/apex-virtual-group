@@ -36,6 +36,8 @@ jobs:
           node --check auth-core.js
           node --check sync-core.js
           node --check supabase-sync.js
+          node --check supabase-bridge.js
+          node --check supabase/functions/bridge/core.js
 
       - name: Run unit tests
         run: node --test tests/*.test.mjs
