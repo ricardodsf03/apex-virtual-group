@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.6.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.7.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -68,6 +68,17 @@ Vista **Decisões**: qualquer diretor (ou o fundador) propõe; só o **dono** da
 - O contador "Decisões pendentes" da visão geral é real.
 - Migração: `supabase/migrations/20261115210000_decisions.sql`, com testes RLS (dono decide, membro não, isolamento entre organizações).
 - Conflito entre dispositivos: se a mesma decisão for tomada de forma diferente em dois lugares, vale a primeira e a sincronização do outro mostra "Sem sincronização".
+
+## Bridge (v0.7.0)
+Leva uma **decisão aprovada** ao repositório como **Draft PR**, sem nunca escrever no `main`.
+- Na vista Decisões, com sessão iniciada, cada decisão aprovada mostra **Registrar no repositório**.
+- A Edge Function `bridge` (`supabase/functions/bridge/`) confere a sessão, que a decisão é da organização, que está aprovada e que quem pede é o dono.
+- Cria o branch `apex/decisao-<nome>-<id>`, faz um commit com `docs/decisoes/<data>-<nome>.md` e abre um Draft PR. O CI roda no PR e o merge é humano.
+- Auditoria na tabela `bridge_runs` (quem pediu, decisão, branch, commit, PR). O navegador só lê; quem escreve é a função. Uma execução por decisão; se falhar, pode tentar de novo.
+- Travas no código (`core.js`): só branches `apex/*`; recusa `.github/`, migrações, funções, `.env` e chaves; bloqueia conteúdo que pareça chave ou token; no máximo 20 arquivos.
+- Credencial: **GitHub App** com permissões *Contents: read & write* e *Pull requests: read & write*, instalada só neste repositório.
+- Segredos (Supabase › Edge Functions › Secrets): `GITHUB_APP_ID` e `GITHUB_APP_PRIVATE_KEY` (conteúdo do `.pem`). Nunca no código nem no chat.
+- Implantação com `verify_jwt = false`: a sessão é verificada no código (`auth.getUser`), como o Supabase recomenda para as chaves novas.
 
 ## Cargos
 | Código | Cargo |

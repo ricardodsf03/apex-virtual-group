@@ -92,3 +92,9 @@ Sem commits diretos no `main` (alterações por pull request), sem reconstruir o
 - Conta do fundador criada; cadastro aberto desativado no Supabase.
 - Chave da GitHub App rodada pelo fundador (informado por ele; não verificável a partir do repositório).
 - Pendentes: verificação em dois passos no GitHub e no Supabase, proteção do `main`, decidir repositório privado, recuperar o trabalho antigo do Codespace (guardado em branches de backup locais e no stash).
+
+## Atualização (17/11/2026)
+- Migração `decisions` aplicada; decisão de teste aprovada com quem e quando gravados pelo servidor.
+- Verificação em dois passos ativada pelo fundador no GitHub e no Supabase.
+- `main` protegido por ruleset (PR obrigatório, CI "Validate Apex" e "Testar migrações e RLS", sem apagar, sem force push). Repositório continua público por decisão do fundador: no plano gratuito, a proteção só vale em repositório público.
+- v0.7.0: Bridge (Edge Function + tabela `bridge_runs`).

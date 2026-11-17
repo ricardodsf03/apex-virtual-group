@@ -12,7 +12,7 @@ test("arranque limpo cria estado inicial e grava-o", () => {
   assert.equal(state.projects.length, 2);
   assert.equal(state.tasks.length, 6);
   assert.equal(state.activities.length, 1);
-  assert.match(state.activities[0].message, /0\.6\.0/);
+  assert.match(state.activities[0].message, /0\.7\.0/);
   assert.equal(saved(app).tasks.length, 6);
 });
 
@@ -119,8 +119,8 @@ test("cabeçalho mostra o dia da semana atual e a versão", () => {
     .toLocaleDateString("pt-BR", { weekday: "long" })
     .toUpperCase();
   assert.equal(app.element("#todayLabel").textContent, `${weekday} · WORKSPACE`);
-  assert.equal(app.element("#appVersion").textContent, "v0.6.0");
-  assert.equal(app.element("#footerVersion").textContent, "v0.6.0");
+  assert.equal(app.element("#appVersion").textContent, "v0.7.0");
+  assert.equal(app.element("#footerVersion").textContent, "v0.7.0");
 });
 
 test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {
@@ -185,4 +185,35 @@ test("rejeitar uma decisão pendente", () => {
   const id = app.run("state.decisions[0].id");
   app.fire("#decisionList", "click", { target: { dataset: { decisionReject: id } } });
   assert.equal(app.run("state.decisions[0].status"), "Rejeitada");
+});
+
+test("Bridge: botão só aparece em decisão aprovada e com sessão iniciada", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "Contratar";
+  app.fire("#saveDecisionBtn");
+  const id = app.run("state.decisions[0].id");
+  app.fire("#decisionList", "click", { target: { dataset: { decisionApprove: id } } });
+  app.run("window.apexDecisionFilter = 'Aprovada'; renderDecisions();");
+  assert.ok(!app.element("#decisionList").innerHTML.includes("data-decision-bridge"), "modo local sem botão");
+
+  app.run("window.apexOrganizationId = 'org'; renderDecisions();");
+  assert.ok(app.element("#decisionList").innerHTML.includes(`data-decision-bridge="${id}"`));
+
+  app.run(`window.apexBridgeRuns = { "${id}": { status: "opened", pr_number: 12, pr_url: "https://github.com/o/r/pull/12?a=<x>" } }; renderDecisions();`);
+  const html = app.element("#decisionList").innerHTML;
+  assert.ok(html.includes("Draft PR #12"));
+  assert.ok(html.includes("pull/12?a=&lt;x&gt;"), "link escapado");
+  assert.ok(!html.includes("data-decision-bridge"));
+
+  app.run(`window.apexBridgeRuns = { "${id}": { status: "failed", error: "<b>erro</b>" } }; renderDecisions();`);
+  assert.ok(app.element("#decisionList").innerHTML.includes("&lt;b&gt;erro&lt;/b&gt;"));
+  assert.ok(app.element("#decisionList").innerHTML.includes("Tentar de novo"));
+});
+
+test("Bridge: decisão pendente nunca mostra o botão", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "Pendente";
+  app.fire("#saveDecisionBtn");
+  app.run("window.apexOrganizationId = 'org'; renderDecisions();");
+  assert.ok(!app.element("#decisionList").innerHTML.includes("data-decision-bridge"));
 });

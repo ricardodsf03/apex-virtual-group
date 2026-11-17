@@ -1,5 +1,5 @@
 // Mantenha esta versão igual a APP_VERSION em app.js (o quality gate verifica).
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 const CACHE = `apex-v${VERSION}`;
 const FONT_CACHE = "apex-fonts";
 
@@ -14,6 +14,7 @@ const ASSETS = [
   "./auth-core.js",
   "./sync-core.js",
   "./supabase-sync.js",
+  "./supabase-bridge.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.png",

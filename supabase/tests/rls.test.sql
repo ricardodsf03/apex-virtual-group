@@ -57,6 +57,21 @@ insert into public.decisions (organization_id, title) values ('aaaaaaaa-0000-000
 delete from public.decisions where title = 'Pendente A';
 select pg_temp.expect_eq((select count(*) from public.decisions), 1, 'decisão pendente pode ser apagada');
 
+-- Bridge: só o servidor escreve; membros leem
+select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111' from public.decisions limit 1$$, 'navegador não cria execuções da Bridge');
+reset role;
+insert into public.bridge_runs (organization_id, decision_id, requested_by, status, branch, pr_number, pr_url)
+  select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'opened', 'apex/decisao-a-12345678', 7, 'https://github.com/o/r/pull/7'
+  from public.decisions where title = 'Decisão A';
+select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, branch) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'main' from public.decisions where title = 'Decisão A'$$, 'uma execução por decisão e só branches apex/*');
+select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, branch) values ('aaaaaaaa-0000-0000-0000-000000000001', gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'main')$$, 'branch fora de apex/* é recusado');
+set role authenticated; select set_config('request.jwt.claim.sub', :'A', false);
+select pg_temp.expect_eq((select count(*) from public.bridge_runs), 1, 'A lê as execuções da sua organização');
+select pg_temp.expect_fail($$update public.bridge_runs set pr_number = 999$$, 'navegador não altera execuções (sem permissão)');
+select pg_temp.expect_eq((select count(*) from public.bridge_runs where pr_number = 7), 1, 'navegador não altera execuções');
+select pg_temp.expect_fail($$delete from public.bridge_runs$$, 'navegador não apaga execuções (sem permissão)');
+select pg_temp.expect_eq((select count(*) from public.bridge_runs), 1, 'execução intacta');
+
 -- Membro que não é dono: propõe, mas não decide
 reset role;
 insert into auth.users values ('33333333-3333-3333-3333-333333333333');
@@ -76,6 +91,7 @@ select pg_temp.expect_eq((select count(*) from public.organization_members), 0, 
 select pg_temp.expect_eq((select count(*) from public.projects), 0, 'B não vê projetos de A');
 select pg_temp.expect_eq((select count(*) from public.tasks), 0, 'B não vê tarefas de A');
 select pg_temp.expect_eq((select count(*) from public.decisions), 0, 'B não vê decisões de A');
+select pg_temp.expect_eq((select count(*) from public.bridge_runs), 0, 'B não vê execuções da Bridge de A');
 select pg_temp.expect_fail($$insert into public.decisions (organization_id, title) values ('aaaaaaaa-0000-0000-0000-000000000001','Intrusa')$$, 'B não escreve decisões na organização de A');
 select pg_temp.expect_eq((select count(*) from public.directors), 0, 'B não vê diretores de A');
 select pg_temp.expect_eq((select count(*) from public.activities), 0, 'B não vê atividade de A');
@@ -102,6 +118,7 @@ select pg_temp.expect_eq((select count(*) from public.tasks where title = 'Taref
 reset role; set role anon; select set_config('request.jwt.claim.sub', '', false);
 select pg_temp.expect_fail($$select * from public.tasks$$, 'anônimo não lê tarefas');
 select pg_temp.expect_fail($$select * from public.decisions$$, 'anônimo não lê decisões');
+select pg_temp.expect_fail($$select * from public.bridge_runs$$, 'anônimo não lê execuções da Bridge');
 select pg_temp.expect_fail($$select * from public.organizations$$, 'anônimo não lê organizações');
 select pg_temp.expect_fail($$insert into public.tasks (organization_id, title, owner_role) values ('aaaaaaaa-0000-0000-0000-000000000001','x','CTO')$$, 'anônimo não escreve');
 reset role;
