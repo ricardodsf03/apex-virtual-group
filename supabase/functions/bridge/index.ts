@@ -4,6 +4,8 @@
 //   GITHUB_APP_ID            número da GitHub App
 //   GITHUB_APP_PRIVATE_KEY   chave privada (.pem) da app, conteúdo completo
 //   BRIDGE_REPO              opcional, "dono/repositório" (padrão abaixo)
+//   ANTHROPIC_API_KEY        chave da Claude API (só para os planos dos diretores)
+//   ANTHROPIC_MODEL          opcional, modelo do Claude (padrão em core.js)
 // SUPABASE_URL e as chaves do projeto (SUPABASE_PUBLISHABLE_KEYS e
 // SUPABASE_SECRET_KEYS, ou as antigas SUPABASE_ANON_KEY e
 // SUPABASE_SERVICE_ROLE_KEY) já existem na Edge Function. A chave secreta só é
@@ -12,7 +14,7 @@
 // Implantar com verify_jwt = false: a sessão do usuário é verificada abaixo
 // (auth.getUser), como recomenda o Supabase para as chaves novas.
 import { createClient } from "npm:@supabase/supabase-js@2.109.0";
-import { executeDecision, publicError } from "./core.js";
+import { executeDecision, executePlan, planAuthorRole, publicError } from "./core.js";
 
 const DEFAULT_REPO = "ricardodsf03/apex-virtual-group";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,12 +50,16 @@ Deno.serve(async request => {
   if (!authorization.startsWith("Bearer ")) return reply(401, { error: "Entre na sua conta." });
 
   let decisionId = "";
+  let kind = "record";
   try {
-    decisionId = String((await request.json())?.decision_id ?? "");
+    const body = await request.json();
+    decisionId = String(body?.decision_id ?? "");
+    kind = String(body?.kind ?? "record");
   } catch {
     return reply(400, { error: "Pedido inválido." });
   }
   if (!UUID.test(decisionId)) return reply(400, { error: "Decisão inválida." });
+  if (kind !== "record" && kind !== "plan") return reply(400, { error: "Tipo de pedido inválido." });
 
   const url = Deno.env.get("SUPABASE_URL")!;
   // Cliente com a sessão do usuário: a RLS decide o que ele pode ver.
@@ -91,9 +97,10 @@ Deno.serve(async request => {
     .from("bridge_runs")
     .select("id, status, pr_url, pr_number")
     .eq("decision_id", decisionId)
+    .eq("kind", kind)
     .maybeSingle();
   if (existing?.status === "opened") {
-    return reply(200, { status: "opened", pr_url: existing.pr_url, pr_number: existing.pr_number, repeated: true });
+    return reply(200, { status: "opened", kind, pr_url: existing.pr_url, pr_number: existing.pr_number, repeated: true });
   }
   if (existing?.status === "running") return reply(409, { error: "Esta decisão já está sendo enviada." });
 
@@ -103,7 +110,7 @@ Deno.serve(async request => {
   } else {
     const { data: run, error: runError } = await asServer
       .from("bridge_runs")
-      .insert({ organization_id: decision.organization_id, decision_id: decisionId, requested_by: userId })
+      .insert({ organization_id: decision.organization_id, decision_id: decisionId, requested_by: userId, kind })
       .select("id")
       .single();
     if (runError) return reply(409, { error: "Esta decisão já está sendo enviada." });
@@ -112,14 +119,32 @@ Deno.serve(async request => {
 
   const [owner, repo] = (Deno.env.get("BRIDGE_REPO") ?? DEFAULT_REPO).split("/");
   try {
-    const result = await executeDecision({
+    const github = {
       decision,
       fetchFn: fetch,
-      appId: Deno.env.get("GITHUB_APP_ID") ?? "",
+      appId: (Deno.env.get("GITHUB_APP_ID") ?? "").trim(),
       privateKey: Deno.env.get("GITHUB_APP_PRIVATE_KEY") ?? "",
       owner,
       repo
-    });
+    };
+    let result;
+    if (kind === "plan") {
+      // O diretor que escreve o plano, lido com a sessão do usuário (RLS).
+      const { data: director } = await asUser
+        .from("directors")
+        .select("role_code, name, description")
+        .eq("organization_id", decision.organization_id)
+        .eq("role_code", planAuthorRole(decision))
+        .maybeSingle();
+      result = await executePlan({
+        ...github,
+        director: director ?? undefined,
+        apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").trim(),
+        model: (Deno.env.get("ANTHROPIC_MODEL") ?? "").trim() || undefined
+      });
+    } else {
+      result = await executeDecision(github);
+    }
     await asServer.from("bridge_runs").update({
       status: "opened",
       branch: result.branch,
@@ -127,7 +152,7 @@ Deno.serve(async request => {
       pr_number: result.number,
       pr_url: result.url
     }).eq("id", runId);
-    return reply(200, { status: "opened", pr_url: result.url, pr_number: result.number, branch: result.branch });
+    return reply(200, { status: "opened", kind, pr_url: result.url, pr_number: result.number, branch: result.branch });
   } catch (error) {
     console.error("bridge:", error);
     const message = publicError(error);

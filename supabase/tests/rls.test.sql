@@ -64,13 +64,16 @@ insert into public.bridge_runs (organization_id, decision_id, requested_by, stat
   select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'opened', 'apex/decisao-a-12345678', 7, 'https://github.com/o/r/pull/7'
   from public.decisions where title = 'Decisão A';
 select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, branch) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'main' from public.decisions where title = 'Decisão A'$$, 'uma execução por decisão e só branches apex/*');
+select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, kind) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'record' from public.decisions where title = 'Decisão A'$$, 'um registro por decisão');
+insert into public.bridge_runs (organization_id, decision_id, requested_by, kind, status) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'plan', 'opened' from public.decisions where title = 'Decisão A';
+select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, kind) select 'aaaaaaaa-0000-0000-0000-000000000001', id, '11111111-1111-1111-1111-111111111111', 'outro' from public.decisions where title = 'Decisão A'$$, 'tipo de execução inválido');
 select pg_temp.expect_fail($$insert into public.bridge_runs (organization_id, decision_id, requested_by, branch) values ('aaaaaaaa-0000-0000-0000-000000000001', gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'main')$$, 'branch fora de apex/* é recusado');
 set role authenticated; select set_config('request.jwt.claim.sub', :'A', false);
-select pg_temp.expect_eq((select count(*) from public.bridge_runs), 1, 'A lê as execuções da sua organização');
+select pg_temp.expect_eq((select count(*) from public.bridge_runs), 2, 'A lê as execuções da sua organização (registro e plano)');
 select pg_temp.expect_fail($$update public.bridge_runs set pr_number = 999$$, 'navegador não altera execuções (sem permissão)');
 select pg_temp.expect_eq((select count(*) from public.bridge_runs where pr_number = 7), 1, 'navegador não altera execuções');
 select pg_temp.expect_fail($$delete from public.bridge_runs$$, 'navegador não apaga execuções (sem permissão)');
-select pg_temp.expect_eq((select count(*) from public.bridge_runs), 1, 'execução intacta');
+select pg_temp.expect_eq((select count(*) from public.bridge_runs), 2, 'execuções intactas');
 
 -- Membro que não é dono: propõe, mas não decide
 reset role;
