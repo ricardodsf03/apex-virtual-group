@@ -12,7 +12,7 @@ test("arranque limpo cria estado inicial e grava-o", () => {
   assert.equal(state.projects.length, 2);
   assert.equal(state.tasks.length, 6);
   assert.equal(state.activities.length, 1);
-  assert.match(state.activities[0].message, /0\.8\.0/);
+  assert.match(state.activities[0].message, /0\.8\.1/);
   assert.equal(saved(app).tasks.length, 6);
 });
 
@@ -119,8 +119,8 @@ test("cabeçalho mostra o dia da semana atual e a versão", () => {
     .toLocaleDateString("pt-BR", { weekday: "long" })
     .toUpperCase();
   assert.equal(app.element("#todayLabel").textContent, `${weekday} · WORKSPACE`);
-  assert.equal(app.element("#appVersion").textContent, "v0.8.0");
-  assert.equal(app.element("#footerVersion").textContent, "v0.8.0");
+  assert.equal(app.element("#appVersion").textContent, "v0.8.1");
+  assert.equal(app.element("#footerVersion").textContent, "v0.8.1");
 });
 
 test("conselho mostra 6 diretores no painel e 9 na vista completa", () => {
@@ -150,7 +150,7 @@ test("estado antigo sem decisões é carregado com lista vazia", () => {
 test("propor, aprovar e rejeitar decisões; decisão tomada é definitiva", () => {
   const app = createApp();
   app.element("#decisionTitle").value = "<b>Comprar</b> plano";
-  app.element("#decisionRationale").value = "Preciso";
+  app.element("#decisionRationale").value = "Preciso de mais capacidade no banco.";
   app.element("#decisionProposer").value = "CFO";
   app.fire("#saveDecisionBtn");
 
@@ -181,6 +181,7 @@ test("decisão sem título é rejeitada", () => {
 test("rejeitar uma decisão pendente", () => {
   const app = createApp();
   app.element("#decisionTitle").value = "Algo";
+  app.element("#decisionRationale").value = "Justificativa com detalhe suficiente.";
   app.fire("#saveDecisionBtn");
   const id = app.run("state.decisions[0].id");
   app.fire("#decisionList", "click", { target: { dataset: { decisionReject: id } } });
@@ -190,6 +191,7 @@ test("rejeitar uma decisão pendente", () => {
 test("Bridge: botões só aparecem em decisão aprovada e com sessão iniciada", () => {
   const app = createApp();
   app.element("#decisionTitle").value = "Contratar";
+  app.element("#decisionRationale").value = "Justificativa com detalhe suficiente.";
   app.element("#decisionProposer").value = "CFO";
   app.fire("#saveDecisionBtn");
   const id = app.run("state.decisions[0].id");
@@ -221,6 +223,7 @@ test("Bridge: botões só aparecem em decisão aprovada e com sessão iniciada",
 test("Bridge: decisão do Fundador pede o plano ao CEO", () => {
   const app = createApp();
   app.element("#decisionTitle").value = "Algo";
+  app.element("#decisionRationale").value = "Justificativa com detalhe suficiente.";
   app.element("#decisionProposer").value = "Fundador";
   app.fire("#saveDecisionBtn");
   const id = app.run("state.decisions[0].id");
@@ -232,7 +235,17 @@ test("Bridge: decisão do Fundador pede o plano ao CEO", () => {
 test("Bridge: decisão pendente nunca mostra o botão", () => {
   const app = createApp();
   app.element("#decisionTitle").value = "Pendente";
+  app.element("#decisionRationale").value = "Justificativa com detalhe suficiente.";
   app.fire("#saveDecisionBtn");
   app.run("window.apexOrganizationId = 'org'; renderDecisions();");
   assert.ok(!app.element("#decisionList").innerHTML.includes("data-decision-bridge"));
+});
+
+test("decisão sem justificativa suficiente é rejeitada", () => {
+  const app = createApp();
+  app.element("#decisionTitle").value = "Comprar algo";
+  app.element("#decisionRationale").value = "curta";
+  app.fire("#saveDecisionBtn");
+  assert.equal(app.run("state.decisions.length"), 0);
+  assert.match(app.alerts[0], /justificativa/);
 });

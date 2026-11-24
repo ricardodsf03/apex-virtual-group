@@ -1,4 +1,4 @@
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -467,6 +467,7 @@ $("#taskList").addEventListener("click", event => {
 });
 
 window.apexDecisionFilter = "Pendente";
+const MIN_RATIONALE = 20;
 
 const decisionDialog = $("#decisionDialog");
 
@@ -483,12 +484,17 @@ $("#saveDecisionBtn").addEventListener("click", event => {
     alert("Escreva o que precisa ser decidido.");
     return;
   }
+  const rationale = $("#decisionRationale").value.trim();
+  if (rationale.length < MIN_RATIONALE) {
+    alert(`Explique a decisão em pelo menos ${MIN_RATIONALE} caracteres: os diretores usam a justificativa para planejar.`);
+    return;
+  }
 
   const now = new Date().toISOString();
   const proposer = $("#decisionProposer").value || "Fundador";
   state.decisions.unshift({
     id:makeId(), title,
-    rationale:$("#decisionRationale").value.trim(),
+    rationale,
     proposer, status:"Pendente", note:"", decidedAt:null,
     createdAt:now, updatedAt:now
   });

@@ -129,16 +129,17 @@ Deno.serve(async request => {
     };
     let result;
     if (kind === "plan") {
-      // O diretor que escreve o plano, lido com a sessão do usuário (RLS).
-      const { data: director } = await asUser
+      // O conselho da organização, lido com a sessão do usuário (RLS): o autor
+      // do plano e a lista que o agente usa para atribuir responsáveis.
+      const { data: board } = await asUser
         .from("directors")
         .select("role_code, name, description")
-        .eq("organization_id", decision.organization_id)
-        .eq("role_code", planAuthorRole(decision))
-        .maybeSingle();
+        .eq("organization_id", decision.organization_id);
+      const director = (board ?? []).find(item => item.role_code === planAuthorRole(decision));
       result = await executePlan({
         ...github,
-        director: director ?? undefined,
+        director,
+        board: board ?? [],
         apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").trim(),
         model: (Deno.env.get("ANTHROPIC_MODEL") ?? "").trim() || undefined
       });

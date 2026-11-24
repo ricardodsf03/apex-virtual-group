@@ -157,7 +157,7 @@ test("erro do GitHub vira mensagem clara e sem detalhes internos", async () => {
 // Agente (plano com o Claude)
 // ---------------------------------------------------------------------------
 import {
-  planAuthorRole, branchForPlan, planPath, buildPlanPrompt, callClaude, planRecord,
+  planAuthorRole, branchForPlan, planPath, buildPlanPrompt, boardSummary, callClaude, planRecord,
   executePlan, AgentError, DEFAULT_MODEL
 } from "../supabase/functions/bridge/core.js";
 
@@ -256,4 +256,17 @@ test("plano de decisão não aprovada não chama o Claude", async () => {
     appId: "1", privateKey: PKCS1, owner: "o", repo: "r", apiKey: "k"
   }), /Só decisões aprovadas/);
   assert.equal(env.calls.length, 0);
+});
+
+test("conselho no prompt: cargos reais em ordem; sem dados, os 9 códigos", () => {
+  const board = [
+    { role_code: "CTO", name: "Diretor de Tecnologia", description: "Arquitetura." },
+    { role_code: "CEO", name: "Diretor Executivo", description: "Estratégia." },
+    { role_code: "XYZ", name: "Intruso", description: "x" }
+  ];
+  const summary = boardSummary(board);
+  assert.ok(summary.indexOf("- CEO (Diretor Executivo)") < summary.indexOf("- CTO (Diretor de Tecnologia)"));
+  assert.ok(!summary.includes("Intruso"));
+  assert.equal(boardSummary([]).split("\n").length, 10);
+  assert.match(buildPlanPrompt(DECISION, CFO, board).system, /- CTO \(Diretor de Tecnologia\): Arquitetura\./);
 });
