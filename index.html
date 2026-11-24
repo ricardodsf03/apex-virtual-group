@@ -27,7 +27,7 @@
         <button class="nav-item" data-view="decisions">✓ <span>Decisões</span></button>
         <button class="nav-item" data-view="documents">▤ <span>Documentos</span></button>
       </nav>
-      <div class="sidebar-bottom"><span class="status-dot"></span> Protótipo local <small id="appVersion">v0.8.0</small>
+      <div class="sidebar-bottom"><span class="status-dot"></span> Protótipo local <small id="appVersion">v0.8.1</small>
         <div class="supabase-status" id="supabaseStatus" data-state="checking">Supabase: verificando…</div>
         <div class="supabase-status" id="syncStatus" data-state="" hidden></div></div>
     </aside>
@@ -90,7 +90,7 @@
         <div class="panel" id="decisionList"></div>
       </section>
       <section class="content hidden" id="documentsView"><div class="welcome-row"><div><div class="eyebrow">CONHECIMENTO</div><h1>Documentos</h1><p class="muted">Área reservada para relatórios, decisões e arquivos dos projetos.</p></div></div><div class="empty-state"><div class="empty-icon">▤</div><h2>Biblioteca preparada</h2><p>Na próxima fase conectaremos armazenamento, pesquisa e histórico de versões.</p></div></section>
-      <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · <span id="footerVersion">v0.8.0</span> · Não executa agentes reais</span></footer>
+      <footer>APEX VIRTUAL GROUP <span>Protótipo de interface · <span id="footerVersion">v0.8.1</span> · Não executa agentes reais</span></footer>
     </main>
   </div>
   <dialog id="projectDialog"><form method="dialog" id="projectForm"><div class="dialog-head"><div><div class="eyebrow">NOVO REGISTRO</div><h2>Criar projeto</h2></div><button class="icon-btn" value="cancel" aria-label="Fechar">×</button></div><label for="projectName">Nome do projeto</label><input id="projectName" maxlength="80" required placeholder="Ex.: Plataforma de mobilidade"><label for="projectDescription">Objetivo</label><textarea id="projectDescription" rows="3" placeholder="O que você pretende desenvolver?"></textarea><div class="dialog-actions"><button class="secondary-btn" value="cancel">Cancelar</button><button class="primary-btn" id="saveProjectBtn" value="default">Criar projeto</button></div></form></dialog>
@@ -124,8 +124,8 @@
       </div>
       <label for="decisionTitle">O que precisa ser decidido</label>
       <input id="decisionTitle" maxlength="140" required placeholder="Ex.: Contratar o plano pago do Supabase">
-      <label for="decisionRationale">Justificativa</label>
-      <textarea id="decisionRationale" rows="3" maxlength="2000" placeholder="Por que esta decisão é necessária?"></textarea>
+      <label for="decisionRationale">Justificativa (obrigatória)</label>
+      <textarea id="decisionRationale" rows="3" maxlength="2000" required minlength="20" placeholder="Por que esta decisão é necessária? O que se espera, prazo e orçamento, se houver."></textarea>
       <label for="decisionProposer">Proposta por</label>
       <select id="decisionProposer">
         <option>Fundador</option><option>CEO</option><option>CFO</option><option>COO</option>

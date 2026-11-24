@@ -75,7 +75,7 @@ function fakeSupabase(state) {
             },
             then(resolve) {
               if (op === "update" && isServer) for (const r of rows()) Object.assign(r, payload);
-              return Promise.resolve({ data: null, error: null }).then(resolve);
+              return Promise.resolve({ data: op === "select" ? rows() : null, error: null }).then(resolve);
             }
           };
           return b;
@@ -200,6 +200,7 @@ test("plano: o diretor que propôs escreve com o Claude e abre outro Draft PR", 
   assert.match(body.branch, /^apex\/plano-contratar-plano-/);
   const claude = gh.find(c => c.path === "claude");
   assert.match(claude.body.system, /CFO \(Diretor Financeiro\)/);
+  assert.match(claude.body.system, /conselho da Apex tem estes 9 diretores[\s\S]*- CFO \(Diretor Financeiro\): Custos\./);
   assert.deepEqual(state.bridge_runs.map(r => r.kind).sort(), ["plan", "record"]);
   assert.ok(state.bridge_runs.every(r => r.status === "opened"));
 });

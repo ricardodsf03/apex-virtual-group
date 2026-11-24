@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.8.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.8.1** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -86,6 +86,8 @@ Numa decisão aprovada, **Pedir plano ao diretor** faz o diretor que propôs a d
 - O texto da decisão vai para o modelo marcado como dado (não como instrução). O plano passa pelo filtro de segredos antes de ir para o GitHub.
 - A auditoria (`bridge_runs`) distingue `record` (registro) de `plan` (plano): no máximo um de cada por decisão.
 - Segredos (Supabase › Edge Functions › Secrets): `ANTHROPIC_API_KEY` (obrigatório para os planos) e `ANTHROPIC_MODEL` (opcional; padrão em `core.js`).
+- O agente recebe a lista real dos 9 diretores da organização e só atribui responsáveis entre eles e o Fundador (v0.8.1).
+- A justificativa da decisão é obrigatória (mínimo de 20 caracteres): é a base do plano (v0.8.1).
 - Custo: cada plano é uma chamada à Claude API, paga por uso na conta Anthropic do fundador.
 
 ## Cargos
