@@ -98,3 +98,8 @@ Sem commits diretos no `main` (alterações por pull request), sem reconstruir o
 - Verificação em dois passos ativada pelo fundador no GitHub e no Supabase.
 - `main` protegido por ruleset (PR obrigatório, CI "Validate Apex" e "Testar migrações e RLS", sem apagar, sem force push). Repositório continua público por decisão do fundador: no plano gratuito, a proteção só vale em repositório público.
 - v0.7.0: Bridge (Edge Function + tabela `bridge_runs`).
+
+## Atualização (24/11/2026)
+- Bridge testada de ponta a ponta: Draft PR #12 aberto pela GitHub App a partir da decisão "Teste", CI verde, auditoria `opened`.
+- App publicado no GitHub Pages (o Codespace deixou de ser necessário para usar o app).
+- v0.8.0: primeiro agente com IA (planos de execução por Draft PR, só documentos).

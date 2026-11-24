@@ -30,7 +30,8 @@ async function loadHandler() {
       SUPABASE_URL: "https://x.supabase.co",
       SUPABASE_PUBLISHABLE_KEYS: JSON.stringify({ default: "sb_publishable_x" }),
       SUPABASE_SECRET_KEYS: JSON.stringify({ default: "sb_secret_x" }),
-      GITHUB_APP_ID: "123456",
+      GITHUB_APP_ID: " 123456\n",
+      ANTHROPIC_API_KEY: globalThis.__noClaudeKey ? undefined : "chave-claude",
       GITHUB_APP_PRIVATE_KEY: PEM
     })[name] },
     serve: fn => { handler = fn; }
@@ -63,7 +64,7 @@ function fakeSupabase(state) {
             async single() {
               if (op === "insert") {
                 if (!isServer) return { data: null, error: { message: "rls" } };
-                if ((state[table] ?? []).some(r => r.decision_id === payload.decision_id)) {
+                if ((state[table] ?? []).some(r => r.decision_id === payload.decision_id && r.kind === payload.kind)) {
                   return { data: null, error: { message: "duplicate" } };
                 }
                 const row = { id: `run-${(state[table] ?? []).length + 1}`, status: "running", ...payload };
@@ -90,8 +91,12 @@ function fakeSupabase(state) {
 function fakeGitHub({ failOn = null } = {}) {
   const calls = [];
   globalThis.fetch = async (url, init) => {
+    if (url === "https://api.anthropic.com/v1/messages") {
+      calls.push({ method: "POST", path: "claude", body: JSON.parse(init.body) });
+      return { ok: true, status: 200, json: async () => ({ content: [{ type: "text", text: "## Objetivo\n\nPlano." }], stop_reason: "end_turn" }) };
+    }
     const p = url.replace("https://api.github.com", "");
-    calls.push({ method: init.method, path: p });
+    calls.push({ method: init.method, path: p, body: init.body ? JSON.parse(init.body) : null });
     const reply = (status, json) => ({ ok: status < 300, status, json: async () => json });
     if (failOn && p.includes(failOn)) return reply(422, {});
     if (p.endsWith("/installation")) return reply(200, { id: 9 });
@@ -111,6 +116,7 @@ const baseState = (status = "Aprovada", role = "owner") => ({
   decisions: [{ id: DECISION_ID, organization_id: ORG, title: "Contratar plano", rationale: "",
     proposed_by_role: "CFO", status, decision_note: "", decided_at: "2026-11-17T21:00:00Z" }],
   organization_members: [{ organization_id: ORG, user_id: USER, role }],
+  directors: [{ organization_id: ORG, role_code: "CFO", name: "Diretor Financeiro", description: "Custos." }],
   bridge_runs: []
 });
 
@@ -181,4 +187,35 @@ test("falha no GitHub fica registrada e pode ser repetida", async () => {
   assert.equal(retry.status, 200);
   assert.equal(state.bridge_runs.length, 1);
   assert.equal(state.bridge_runs[0].status, "opened");
+});
+
+test("plano: o diretor que propôs escreve com o Claude e abre outro Draft PR", async () => {
+  const state = baseState(); fakeSupabase(state); const gh = fakeGitHub();
+  const record = await (await call(handler)).json();
+  assert.equal(record.kind, "record");
+  const response = await call(handler, { body: { decision_id: DECISION_ID, kind: "plan" } });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.kind, "plan");
+  assert.match(body.branch, /^apex\/plano-contratar-plano-/);
+  const claude = gh.find(c => c.path === "claude");
+  assert.match(claude.body.system, /CFO \(Diretor Financeiro\)/);
+  assert.deepEqual(state.bridge_runs.map(r => r.kind).sort(), ["plan", "record"]);
+  assert.ok(state.bridge_runs.every(r => r.status === "opened"));
+});
+
+test("plano sem chave da Claude API: erro claro e nada no GitHub", async () => {
+  const state = baseState(); fakeSupabase(state); const gh = fakeGitHub();
+  globalThis.__noClaudeKey = true;
+  const response = await call(handler, { body: { decision_id: DECISION_ID, kind: "plan" } });
+  globalThis.__noClaudeKey = false;
+  assert.equal(response.status, 502);
+  assert.match((await response.json()).error, /ANTHROPIC_API_KEY/);
+  assert.equal(gh.length, 0);
+  assert.equal(state.bridge_runs[0].status, "failed");
+});
+
+test("tipo de pedido desconhecido é recusado", async () => {
+  fakeSupabase(baseState()); fakeGitHub();
+  assert.equal((await call(handler, { body: { decision_id: DECISION_ID, kind: "codigo" } })).status, 400);
 });

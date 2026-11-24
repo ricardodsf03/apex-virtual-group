@@ -38,3 +38,4 @@ dialog input[type=email]:focus,dialog input[type=password]:focus{border-color:#7
 dialog select{width:100%;border:1px solid #344761;border-radius:10px;background:#0b1524;color:white;padding:12px}
 .decision-row a{color:#9fc1ff}.bridge-error{color:#f2a9b6!important}
 footer span span{float:none}
+.decision-actions .secondary{background:#26374e;color:#eaf2fc}

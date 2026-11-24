@@ -1,6 +1,7 @@
-// Botão "Registrar no repositório" das decisões aprovadas (módulo ES).
+// Botões da Bridge nas decisões aprovadas (módulo ES): "Registrar no
+// repositório" (kind "record") e "Pedir plano ao diretor" (kind "plan", com IA).
 // Chama a Edge Function "bridge", que abre um Draft PR no GitHub. Só funciona
-// com sessão iniciada; no modo local o botão não aparece.
+// com sessão iniciada; no modo local os botões não aparecem.
 
 let client = null;
 let organizationId = null;
@@ -16,12 +17,12 @@ async function loadRuns() {
   if (!client || !organizationId) return rerender();
   const { data, error } = await client
     .from("bridge_runs")
-    .select("decision_id, status, pr_url, pr_number, error")
+    .select("decision_id, kind, status, pr_url, pr_number, error")
     .eq("organization_id", organizationId);
   if (error) {
     console.error("Apex: não foi possível ler as execuções da Bridge.", error);
   } else {
-    for (const row of data) runs[row.decision_id] = row;
+    for (const row of data) runs[`${row.decision_id}:${row.kind || "record"}`] = row;
   }
   rerender();
 }
@@ -35,36 +36,42 @@ async function errorMessage(error) {
   return "Não foi possível falar com a Bridge. Tente de novo.";
 }
 
-async function send(decisionId) {
+async function send(decisionId, kind) {
   const decision = window.apexGetState?.().decisions.find(item => item.id === decisionId);
   if (!decision || decision.status !== "Aprovada") return;
-  if (!confirm(`Registrar a decisão "${decision.title}" no repositório? A Bridge vai abrir um Draft PR.`)) return;
+  const question = kind === "plan"
+    ? `Pedir um plano com IA para "${decision.title}"? O diretor escreve o plano e a Bridge abre um Draft PR.`
+    : `Registrar a decisão "${decision.title}" no repositório? A Bridge vai abrir um Draft PR.`;
+  if (!confirm(question)) return;
 
-  runs[decisionId] = { decision_id: decisionId, status: "running" };
+  const key = `${decisionId}:${kind}`;
+  runs[key] = { decision_id: decisionId, kind, status: "running" };
   rerender();
   try {
     await window.apexSyncNow?.(); // a decisão tem de estar no Supabase antes
     const { data, error } = await client.functions.invoke("bridge", {
-      body: { decision_id: decisionId }
+      body: { decision_id: decisionId, kind }
     });
     if (error) {
-      runs[decisionId] = { decision_id: decisionId, status: "failed", error: await errorMessage(error) };
+      runs[key] = { decision_id: decisionId, kind, status: "failed", error: await errorMessage(error) };
     } else {
-      runs[decisionId] = { decision_id: decisionId, status: "opened", pr_url: data.pr_url, pr_number: data.pr_number };
+      runs[key] = { decision_id: decisionId, kind, status: "opened", pr_url: data.pr_url, pr_number: data.pr_number };
       if (!data.repeated) {
-        window.apexRecord?.("Bridge", `Abriu o Draft PR #${data.pr_number} para a decisão "${decision.title}".`, "bridge");
+        const what = kind === "plan" ? "o plano" : "o registro";
+        window.apexRecord?.("Bridge", `Abriu o Draft PR #${data.pr_number} com ${what} da decisão "${decision.title}".`, "bridge");
       }
     }
   } catch (error) {
     console.error("Apex: falha na Bridge.", error);
-    runs[decisionId] = { decision_id: decisionId, status: "failed", error: "Não foi possível falar com a Bridge. Tente de novo." };
+    runs[key] = { decision_id: decisionId, kind, status: "failed", error: "Não foi possível falar com a Bridge. Tente de novo." };
   }
   rerender();
 }
 
 document.querySelector("#decisionList")?.addEventListener("click", event => {
   const id = event.target?.dataset?.decisionBridge;
-  if (id && client && organizationId) send(id);
+  const kind = event.target?.dataset?.bridgeKind === "plan" ? "plan" : "record";
+  if (id && client && organizationId) send(id, kind);
 });
 
 window.addEventListener("apex:organization-ready", event => {

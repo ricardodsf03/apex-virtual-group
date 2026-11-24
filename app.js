@@ -1,4 +1,4 @@
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.8.0";
 const STORAGE_KEY = "apex.core.v02";
 const $ =(selector) => document.querySelector(selector);
 
@@ -202,20 +202,39 @@ function renderTasks() {
 }
 
 // Estado da Bridge para uma decisão aprovada (só com sessão iniciada).
+// Dois pedidos possíveis: "record" (registro da decisão) e "plan" (plano
+// escrito com IA pelo diretor que propôs; se foi o Fundador, o CEO).
+const DIRECTOR_ROLES = agents.map(agent => agent.role);
+
+function planAuthor(item) {
+  return DIRECTOR_ROLES.includes(item.proposer) ? item.proposer : "CEO";
+}
+
+function bridgeLine(item, kind) {
+  const run = (window.apexBridgeRuns || {})[`${item.id}:${kind}`];
+  const id = escapeHtml(item.id);
+  const label = kind === "plan" ? `Plano do ${escapeHtml(planAuthor(item))}` : "Registro";
+  if (run?.status === "opened" && run.pr_url) {
+    return `<small>${label}: <a href="${escapeHtml(run.pr_url)}" target="_blank" rel="noopener noreferrer">Draft PR #${escapeHtml(run.pr_number)}</a></small>`;
+  }
+  if (run?.status === "running") {
+    return `<small>${label}: ${kind === "plan" ? "o diretor está escrevendo (até 1 minuto)…" : "enviando para a Bridge…"}</small>`;
+  }
+  const failed = run?.status === "failed"
+    ? `<small class="bridge-error">${label}: ${escapeHtml(run.error || "falhou")}</small>` : "";
+  const text = run
+    ? "Tentar de novo"
+    : (kind === "plan" ? `Pedir plano ao ${escapeHtml(planAuthor(item))}` : "Registrar no repositório");
+  return { failed, button: `<button class="${kind === "plan" ? "secondary" : "approve"}" data-decision-bridge="${id}" data-bridge-kind="${kind}">${text}</button>` };
+}
+
 function bridgeArea(item) {
   if (item.status !== "Aprovada" || !window.apexOrganizationId) return "";
-  const run = (window.apexBridgeRuns || {})[item.id];
-  const id = escapeHtml(item.id);
-  if (run?.status === "opened" && run.pr_url) {
-    return `<small>Repositório: <a href="${escapeHtml(run.pr_url)}" target="_blank" rel="noopener noreferrer">Draft PR #${escapeHtml(run.pr_number)}</a></small>`;
-  }
-  if (run?.status === "running") return "<small>Repositório: enviando para a Bridge…</small>";
-  const failed = run?.status === "failed"
-    ? `<small class="bridge-error">Bridge: ${escapeHtml(run.error || "falhou")}</small>` : "";
-  return `${failed}
-        <div class="decision-actions">
-          <button class="approve" data-decision-bridge="${id}">${run ? "Tentar de novo" : "Registrar no repositório"}</button>
-        </div>`;
+  const parts = ["record", "plan"].map(kind => bridgeLine(item, kind));
+  const lines = parts.map(part => typeof part === "string" ? part : part.failed).filter(Boolean).join("\n      ");
+  const buttons = parts.filter(part => typeof part !== "string").map(part => part.button).join("");
+  return `${lines}${buttons ? `
+        <div class="decision-actions">${buttons}</div>` : ""}`;
 }
 
 function renderDecisions() {

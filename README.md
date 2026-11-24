@@ -1,6 +1,6 @@
 # Apex Virtual Group
 
-Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.7.0** ("Apex Core").
+Protótipo responsivo do centro de comando da Apex Virtual Group, pensado para iPadOS e computadores. Versão atual: **0.8.0** ("Apex Core").
 
 ## O que já existe
 - Dashboard responsivo com cinco vistas: Visão geral, Conselho, Projetos, Tarefas e Documentos.
@@ -79,6 +79,14 @@ Leva uma **decisão aprovada** ao repositório como **Draft PR**, sem nunca escr
 - Credencial: **GitHub App** com permissões *Contents: read & write* e *Pull requests: read & write*, instalada só neste repositório.
 - Segredos (Supabase › Edge Functions › Secrets): `GITHUB_APP_ID` e `GITHUB_APP_PRIVATE_KEY` (conteúdo do `.pem`). Nunca no código nem no chat.
 - Implantação com `verify_jwt = false`: a sessão é verificada no código (`auth.getUser`), como o Supabase recomenda para as chaves novas.
+
+## Agentes: planos com IA (v0.8.0)
+Numa decisão aprovada, **Pedir plano ao diretor** faz o diretor que propôs a decisão (ou o CEO, se foi o Fundador) escrever um plano de execução com o Claude.
+- A Bridge commita o plano em `docs/planos/<data>-<nome>.md` num branch `apex/plano-*` e abre um Draft PR. O agente não escolhe caminhos nem altera código.
+- O texto da decisão vai para o modelo marcado como dado (não como instrução). O plano passa pelo filtro de segredos antes de ir para o GitHub.
+- A auditoria (`bridge_runs`) distingue `record` (registro) de `plan` (plano): no máximo um de cada por decisão.
+- Segredos (Supabase › Edge Functions › Secrets): `ANTHROPIC_API_KEY` (obrigatório para os planos) e `ANTHROPIC_MODEL` (opcional; padrão em `core.js`).
+- Custo: cada plano é uma chamada à Claude API, paga por uso na conta Anthropic do fundador.
 
 ## Cargos
 | Código | Cargo |
